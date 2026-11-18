@@ -27,6 +27,8 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
   let questionId = 0;
   let lastTarget: string | null = null;
   let replay: () => void = () => {};
+  // 새 말 순서를 시작할 때마다 올린다. 끊긴 말의 .then은 값이 바뀌었으면 이어 말하지 않는다.
+  let speechSeq = 0;
 
   const pool: LearnItem[] = groupId === COMPOSE_GROUP ? composePool() : group.items;
   const isNumberGroup = world === 'numbers' && NUMBER_KINDS.includes(groupId);
@@ -45,9 +47,10 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
   }
 
   function promptLetter(item: LearnItem, id: number) {
+    const seq = ++speechSeq;
     if (item.lang === 'en-US') {
       void say(deps, item.name, 'en-US').then(() => {
-        if (current(id)) void say(deps, '찾아봐!');
+        if (current(id) && seq === speechSeq) void say(deps, '찾아봐!');
       });
     } else {
       void say(deps, `${objectJosa(item.name)} 찾아봐!`);
@@ -74,7 +77,10 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
   function nextNumberQuestion(id: number) {
     const q = makeNumberQuestion(groupId as NumberKind, deps.rng);
     stage.replaceChildren(renderNumberQuestion(q, (choice, node) => answer(choice === q.answer, node, id)));
-    replay = () => void say(deps, q.prompt);
+    replay = () => {
+      speechSeq++;
+      void say(deps, q.prompt);
+    };
     replay();
   }
 
@@ -89,12 +95,14 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
     if (!current(id)) return;
     if (!ok) {
       shake(node);
+      const seq = ++speechSeq;
       void say(deps, '다시 들어볼까?').then(() => {
-        if (current(id)) replay();
+        if (current(id) && seq === speechSeq) replay();
       });
       return;
     }
     locked = true;
+    speechSeq++;
     deps.progress = recordCorrect(deps.progress, world, groupId);
     deps.save(deps.progress);
     node.classList.add('correct');

@@ -129,3 +129,70 @@ describe('find', () => {
     expect(deps.speak).toHaveBeenLastCalledWith('다시 들어볼까?', { lang: 'ko-KR', volume: 0.5 });
   });
 });
+
+describe('find speech sequencing', () => {
+  /** speak mock that behaves like audio.ts: a new call resolves (cancels) the pending one. */
+  function cancelableSpeak() {
+    const spoken: [string, string][] = [];
+    let pending: (() => void) | null = null;
+    const speak = vi.fn((text: string, opts: { lang: string }) => {
+      pending?.();
+      spoken.push([text, opts.lang]);
+      return new Promise<void>((resolve) => {
+        pending = resolve;
+      });
+    });
+    const finish = () => {
+      const p = pending;
+      pending = null;
+      p?.();
+    };
+    return { speak, spoken, finish };
+  }
+
+  const flush = () => new Promise((r) => setTimeout(r, 0));
+  const abc1 = getWorld('abc').groups[0].items;
+
+  function setup() {
+    const mock = cancelableSpeak();
+    const deps = { ...makeDeps(), speak: mock.speak as unknown as ScreenDeps['speak'] };
+    cleanup = renderFind(root, { name: 'find', world: 'abc', group: 'abc1' }, deps);
+    const name = mock.spoken[0][0];
+    expect(abc1.some((i) => i.name === name)).toBe(true);
+    return { ...mock, name };
+  }
+
+  it('replaying while the letter name plays is not cut off by a stale 찾아봐!', async () => {
+    const { spoken, finish, name } = setup();
+    root.querySelector<HTMLElement>('.replay-btn')!.click();
+    await flush();
+    expect(spoken).toEqual([
+      [name, 'en-US'],
+      [name, 'en-US'],
+    ]);
+    finish();
+    await flush();
+    expect(spoken.slice(-2)).toEqual([
+      [name, 'en-US'],
+      ['찾아봐!', 'ko-KR'],
+    ]);
+    expect(spoken.length).toBe(3);
+  });
+
+  it('a wrong tap while the name plays is not followed by a stale 찾아봐!', async () => {
+    const { spoken, finish, name } = setup();
+    const glyph = abc1.find((i) => i.name === name)!.glyph;
+    [...root.querySelectorAll<HTMLButtonElement>('[data-choice]')].find((b) => b.textContent !== glyph)!.click();
+    await flush();
+    expect(spoken.slice(1)).toEqual([['다시 들어볼까?', 'ko-KR']]);
+    finish();
+    await flush();
+    finish();
+    await flush();
+    expect(spoken.slice(1)).toEqual([
+      ['다시 들어볼까?', 'ko-KR'],
+      [name, 'en-US'],
+      ['찾아봐!', 'ko-KR'],
+    ]);
+  });
+});
