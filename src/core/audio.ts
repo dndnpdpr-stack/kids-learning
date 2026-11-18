@@ -84,19 +84,31 @@ export function speak(text: string, opts: SpeakOptions): Promise<void> {
       return;
     }
 
+    let clipFailed = false;
+    const clipFail = () => {
+      if (clipFailed || finished) return;
+      clipFailed = true;
+      if (audio) {
+        audio.onended = null;
+        audio.onerror = null;
+        try {
+          audio.pause();
+        } catch {
+          /* ignore */
+        }
+        audio = null;
+      }
+      speakTts();
+    };
+
     try {
       audio = new Audio(url);
       audio.volume = volume;
       audio.onended = finish;
-      audio.onerror = finish;
-      audio.play().catch(() => {
-        if (finished) return;
-        audio = null;
-        speakTts();
-      });
+      audio.onerror = clipFail;
+      audio.play().catch(clipFail);
     } catch {
-      audio = null;
-      speakTts();
+      clipFail();
     }
   });
 }

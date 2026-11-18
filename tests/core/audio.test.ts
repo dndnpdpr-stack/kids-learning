@@ -139,12 +139,6 @@ describe('clip resolver', () => {
     await expect(p).resolves.toBeUndefined();
   });
 
-  it('resolves on clip error', async () => {
-    const p = speak('가', { lang: 'ko-KR' });
-    audios[0].onerror!();
-    await expect(p).resolves.toBeUndefined();
-  });
-
   it('falls back to TTS when play() is rejected', async () => {
     vi.stubGlobal(
       'Audio',
@@ -157,6 +151,50 @@ describe('clip resolver', () => {
     expect(synth.speak).toHaveBeenCalledTimes(1);
     lastUtterance().onend!();
     await expect(p).resolves.toBeUndefined();
+  });
+
+  describe('clip failure falls back to TTS exactly once', () => {
+    let rejectPlay: () => void;
+    beforeEach(() => {
+      vi.stubGlobal(
+        'Audio',
+        class extends FakeAudio {
+          play = vi.fn(
+            () => new Promise<void>((_, rej) => (rejectPlay = () => rej(new Error('blocked')))),
+          );
+        },
+      );
+    });
+
+    it('error event before play() rejects', async () => {
+      let done = false;
+      void speak('가', { lang: 'ko-KR' }).then(() => (done = true));
+      audios[0].onerror!();
+      rejectPlay();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(synth.speak).toHaveBeenCalledTimes(1);
+      expect(done).toBe(false);
+      lastUtterance().onend!();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(done).toBe(true);
+    });
+
+    it('play() rejects, then error event fires', async () => {
+      let done = false;
+      void speak('가', { lang: 'ko-KR' }).then(() => (done = true));
+      rejectPlay();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(synth.speak).toHaveBeenCalledTimes(1);
+      expect(audios[0].onerror).toBeNull();
+      audios[0].onerror?.();
+      audios[0].onended?.();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(synth.speak).toHaveBeenCalledTimes(1);
+      expect(done).toBe(false);
+      lastUtterance().onend!();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(done).toBe(true);
+    });
   });
 
   it('stopSpeaking pauses the clip and resolves', async () => {
