@@ -602,7 +602,19 @@ section.world-abc .group-card {
 @property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
 @keyframes press-fill { to { --p: 100%; } }
 
-.parent-panel { display: flex; flex-direction: column; gap: 16px; padding: 16px; font-size: 1.1rem; }
+/* 어른용 화면: 내용이 길면 이 영역만 스크롤해서 아래 버튼(진도 초기화)이 잘리지 않게 한다. */
+.parent-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  font-size: 1.1rem;
+}
+.parent-panel > * { flex: none; }
 .parent-info { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .reset-btn { min-height: 64px; padding: 0 16px; }
 .volume-slider { width: 100%; min-height: 64px; }
