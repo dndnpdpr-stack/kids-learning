@@ -23,7 +23,7 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
   panel.hidden = true;
 
   const cards = world.groups.map((group, index) => {
-    const unlocked = isGroupUnlocked(deps.progress, world, index);
+    const unlocked = deps.testMode || isGroupUnlocked(deps.progress, world, index);
     const card = button(
       [
         el('span', 'card-glyph', [cardLabel(group)]),

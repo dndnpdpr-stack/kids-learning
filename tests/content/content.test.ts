@@ -42,7 +42,7 @@ describe('content', () => {
   });
   it('numbers', () => {
     const w = getWorld('numbers');
-    expect(w.groups.map((g) => g.id)).toEqual(['count10', 'count20', 'compare', 'add']);
+    expect(w.groups.map((g) => g.id)).toEqual(['count10', 'compare', 'add', 'count20']);
     expect(w.groups[0].items.map((i) => i.glyph)).toEqual(['1','2','3','4','5','6','7','8','9','10']);
     expect(sizes('numbers')).toEqual([10, 0, 0, 0]);
   });

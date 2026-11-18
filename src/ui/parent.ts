@@ -65,6 +65,10 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     { 'data-testid': 'parent-name-save' },
   );
 
+  const testSwitch = el('input', 'test-switch', [], { type: 'checkbox', 'data-testid': 'test-mode' });
+  testSwitch.checked = deps.testMode;
+  testSwitch.addEventListener('change', () => deps.setTestMode(testSwitch.checked));
+
   let confirming = false;
   const resetBtn = button(
     RESET_LABEL,
@@ -98,6 +102,10 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
         info,
         el('div', 'parent-row', [stars, el('label', 'parent-volume', [el('span', 'parent-key', ['볼륨']), slider])]),
         resetBtn,
+        el('label', 'parent-row test-row', [
+          testSwitch,
+          el('span', '', ['🧪 테스트 모드 ', el('small', '', ['(모든 묶음 열림 · 🔒 한 번에 열기)'])]),
+        ]),
       ]),
     ]),
   );

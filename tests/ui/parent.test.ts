@@ -108,6 +108,8 @@ function makeDeps(p?: Partial<Progress>): ScreenDeps {
     rng: seededRng(1),
     childName: null,
     announce: null,
+    testMode: false,
+    setTestMode: vi.fn(),
     saveName: vi.fn(),
   };
 }

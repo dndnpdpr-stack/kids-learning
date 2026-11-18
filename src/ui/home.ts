@@ -25,7 +25,8 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     );
   });
 
-  const parent = button('🔒', () => {}, 'icon-btn parent-btn', {
+  // 평소엔 3초 길게 눌러야 열린다. 테스트 모드에서는 한 번 눌러도 바로 연다.
+  const parent = button('🔒', () => deps.testMode && go({ name: 'parent' }), 'icon-btn parent-btn', {
     'data-testid': 'parent-btn',
     'aria-label': '부모',
   });
@@ -34,7 +35,11 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
 
   root.append(
     el('section', 'screen home', [
-      el('div', 'home-top', [el('div', 'stars-badge', [`⭐ ${deps.progress.stars}`]), parent]),
+      el('div', 'home-top', [
+        el('div', 'stars-badge', [`⭐ ${deps.progress.stars}`]),
+        ...(deps.testMode ? [el('div', 'test-badge', ['🧪 테스트'], { 'data-testid': 'test-badge' })] : []),
+        parent,
+      ]),
       el('h1', 'app-title', [deps.childName ? `${deps.childName}의 ${APP_NAME}` : APP_NAME]),
       el('div', 'world-list', worlds),
     ]),

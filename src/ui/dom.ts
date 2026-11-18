@@ -13,6 +13,9 @@ export interface ScreenDeps {
   childName: string | null;
   /** 다음 화면이 그려진 직후 말할 문장. 화면 전환을 음성 끝까지 기다리지 않게 한다. */
   announce: string | null;
+  /** 테스트 모드: 모든 묶음 열림, 부모 메뉴 한 번 눌러 열기. */
+  testMode: boolean;
+  setTestMode(on: boolean): void;
   /** 이름을 저장하고 childName을 갱신한다. */
   saveName(name: string): void;
 }

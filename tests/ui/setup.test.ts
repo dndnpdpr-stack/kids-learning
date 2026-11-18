@@ -14,6 +14,10 @@ function makeDeps(childName: string | null = null): ScreenDeps {
     rng: seededRng(1),
     childName,
     announce: null,
+    testMode: false,
+    setTestMode: vi.fn((on: boolean) => {
+      deps.testMode = on;
+    }),
     saveName: vi.fn((n: string) => {
       deps.childName = n;
     }),
@@ -131,5 +135,43 @@ describe('go() to the current hash', () => {
     go({ name: 'home' });
     expect(seen).toEqual(['home', 'home']);
     stop();
+  });
+});
+
+describe('test mode', () => {
+  it('home: one tap on 🔒 opens the parent screen only in test mode', async () => {
+    const { render: home } = await import('../../src/ui/home');
+    const off = makeDeps('하늘');
+    cleanup = home(root, { name: 'home' }, off);
+    root.querySelector<HTMLButtonElement>('[data-testid="parent-btn"]')!.click();
+    expect(location.hash).not.toBe('#/parent');
+    expect(root.querySelector('[data-testid="test-badge"]')).toBeNull();
+    cleanup();
+    root.replaceChildren();
+
+    const on = { ...makeDeps('하늘'), testMode: true };
+    cleanup = home(root, { name: 'home' }, on);
+    expect(root.querySelector('[data-testid="test-badge"]')).not.toBeNull();
+    root.querySelector<HTMLButtonElement>('[data-testid="parent-btn"]')!.click();
+    expect(location.hash).toBe('#/parent');
+  });
+
+  it('world: every group is unlocked in test mode without touching progress', async () => {
+    const { render: world } = await import('../../src/ui/world');
+    const deps = { ...makeDeps('하늘'), testMode: true };
+    cleanup = world(root, { name: 'world', world: 'hangul' }, deps);
+    const locked = [...root.querySelectorAll<HTMLElement>('[data-group]')].map((c) => c.dataset.locked);
+    expect(locked.every((l) => l === 'false')).toBe(true);
+    expect(deps.progress.correct).toEqual({});
+  });
+
+  it('parent: the switch toggles test mode', () => {
+    const deps = makeDeps('하늘');
+    cleanup = renderParent(root, { name: 'parent' }, deps);
+    const sw = root.querySelector<HTMLInputElement>('[data-testid="test-mode"]')!;
+    expect(sw.checked).toBe(false);
+    sw.checked = true;
+    sw.dispatchEvent(new Event('change'));
+    expect(deps.setTestMode).toHaveBeenCalledWith(true);
   });
 });
