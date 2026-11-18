@@ -1,5 +1,6 @@
 import { getWorld, type WorldId } from '../content';
 import { go, type Route } from '../router';
+import { attachLongPress } from './longPress';
 import { button, el, say, type Cleanup, type ScreenDeps } from './dom';
 
 export const APP_NAME = '놀이 학교';
@@ -30,6 +31,8 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     'aria-label': '부모',
   });
 
+  const detachLongPress = attachLongPress(parent, 3000, () => go({ name: 'parent' }));
+
   root.append(
     el('section', 'screen home', [
       el('div', 'home-top', [el('div', 'stars-badge', [`⭐ ${deps.progress.stars}`]), parent]),
@@ -40,5 +43,6 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
 
   return () => {
     disposed = true;
+    detachLongPress();
   };
 }
