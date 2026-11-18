@@ -28,17 +28,61 @@ describe('attachLongPress', () => {
     expect(b.classList.contains('pressing')).toBe(false);
   });
 
-  it.each(['pointerup', 'pointerleave', 'pointercancel', 'contextmenu'])('cancels on %s', (type) => {
+  it.each(['pointerup', 'pointerleave', 'pointercancel'])('cancels on %s', (type) => {
     const b = document.createElement('button');
     const done = vi.fn();
     attachLongPress(b, 3000, done);
     ptr(b, 'pointerdown');
     vi.advanceTimersByTime(2999);
-    const e = ptr(b, type);
-    if (type === 'contextmenu') expect(e.defaultPrevented).toBe(true);
+    ptr(b, type);
     vi.advanceTimersByTime(5000);
     expect(done).not.toHaveBeenCalled();
     expect(b.classList.contains('pressing')).toBe(false);
+  });
+
+  it('contextmenu is suppressed but does not cancel the hold', () => {
+    const b = document.createElement('button');
+    const done = vi.fn();
+    attachLongPress(b, 3000, done);
+    ptr(b, 'pointerdown');
+    vi.advanceTimersByTime(500);
+    const e = ptr(b, 'contextmenu');
+    expect(e.defaultPrevented).toBe(true);
+    vi.advanceTimersByTime(2499);
+    expect(done).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(done).toHaveBeenCalledTimes(1);
+  });
+
+  it('pointermove outside the rect cancels, inside does not', () => {
+    const b = document.createElement('button');
+    b.getBoundingClientRect = () => ({ left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0, toJSON: () => ({}) });
+    const done = vi.fn();
+    const detach = attachLongPress(b, 3000, done);
+    const mv = (x: number, y: number) => {
+      const e = new Event('pointermove', { bubbles: true }) as Event & { pointerId: number; clientX: number; clientY: number };
+      e.pointerId = 1;
+      e.clientX = x;
+      e.clientY = y;
+      b.dispatchEvent(e);
+    };
+    ptr(b, 'pointerdown');
+    mv(50, 50);
+    expect(b.classList.contains('pressing')).toBe(true);
+    mv(150, 50);
+    expect(b.classList.contains('pressing')).toBe(false);
+    vi.advanceTimersByTime(5000);
+    expect(done).not.toHaveBeenCalled();
+    detach();
+  });
+
+  it('releases pointer capture on down', () => {
+    const b = document.createElement('button');
+    const rel = vi.fn();
+    b.releasePointerCapture = rel;
+    attachLongPress(b, 3000, vi.fn());
+    ptr(b, 'pointerdown', 7);
+    expect(rel).toHaveBeenCalledWith(7);
   });
 
   it('ignores a second pointer and detach stops it', () => {

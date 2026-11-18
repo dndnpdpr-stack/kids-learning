@@ -4,6 +4,7 @@ import { setClipResolver, speak, stopSpeaking } from '../../src/core/audio';
 class FakeUtterance {
   lang = '';
   rate = 1;
+  pitch = 1;
   volume = 1;
   voice: unknown = null;
   onend: (() => void) | null = null;
@@ -49,6 +50,23 @@ describe('speak (TTS)', () => {
     const u = lastUtterance();
     expect(u.rate).toBe(0.85);
     expect(u.volume).toBe(0.4);
+  });
+
+  it('sets pitch 1.1', () => {
+    void speak('가', { lang: 'ko-KR' });
+    expect(lastUtterance().pitch).toBe(1.1);
+  });
+
+  it('prefers natural/online voices and matches ko_KR underscore', () => {
+    const plain = { lang: 'ko-KR', name: 'Plain' };
+    const nat = { lang: 'ko-KR', name: 'Microsoft SunHi Online (Natural)' };
+    synth.getVoices.mockReturnValue([plain, nat]);
+    void speak('가', { lang: 'ko-KR' });
+    expect(lastUtterance().voice).toBe(nat);
+    const us = { lang: 'ko_KR', name: 'Underscore' };
+    synth.getVoices.mockReturnValue([{ lang: 'en-US', name: 'e' }, us]);
+    void speak('가', { lang: 'ko-KR' });
+    expect(lastUtterance().voice).toBe(us);
   });
 
   it('picks the first voice matching lang, else none', () => {

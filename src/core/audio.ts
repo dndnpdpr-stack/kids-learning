@@ -26,6 +26,18 @@ export function stopSpeaking(): void {
   }
 }
 
+const VOICE_KEYWORDS = ['natural', 'neural', 'online', 'google', 'premium', 'enhanced'];
+
+export function pickVoice(voices: SpeechSynthesisVoice[], lang: string): SpeechSynthesisVoice | undefined {
+  const prefix = lang.slice(0, 2).toLowerCase();
+  const matches = voices.filter((v) => (v.lang ?? '').replace('_', '-').toLowerCase().split('-')[0] === prefix);
+  for (const k of VOICE_KEYWORDS) {
+    const hit = matches.find((v) => (v.name ?? '').toLowerCase().includes(k));
+    if (hit) return hit;
+  }
+  return matches[0];
+}
+
 export function speak(text: string, opts: SpeakOptions): Promise<void> {
   stopSpeaking();
   return new Promise<void>((resolve) => {
@@ -62,7 +74,8 @@ export function speak(text: string, opts: SpeakOptions): Promise<void> {
         u.lang = opts.lang;
         u.rate = opts.rate ?? DEFAULT_RATE[opts.lang];
         u.volume = volume;
-        const voice = synth.getVoices().find((v) => v.lang === opts.lang);
+        u.pitch = 1.1;
+        const voice = pickVoice(synth.getVoices(), opts.lang);
         if (voice) u.voice = voice;
         u.onend = finish;
         u.onerror = finish;

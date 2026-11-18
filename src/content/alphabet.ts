@@ -17,7 +17,7 @@ const rows: Row[] = [
   ['I', 'ice cream', '🍦'], ['J', 'juice', '🧃'], ['K', 'kite', '🪁'], ['L', 'lion', '🦁'],
   ['M', 'moon', '🌙'], ['N', 'nose', '👃'], ['O', 'orange', '🍊'], ['P', 'pig', '🐷'],
   ['Q', 'queen', '👸'], ['R', 'rabbit', '🐰'], ['S', 'sun', '☀️'], ['T', 'tree', '🌳'],
-  ['U', 'umbrella', '☂️'], ['V', 'violin', '🎻'], ['W', 'watch', '⌚'], ['X', 'xylophone', '🎼'],
+  ['U', 'umbrella', '☂️'], ['V', 'violin', '🎻'], ['W', 'watch', '⌚'], ['X', 'box', '📦'],
   ['Y', 'yo-yo', '🪀'], ['Z', 'zebra', '🦓'],
 ];
 

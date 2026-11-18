@@ -13,6 +13,11 @@ export function attachLongPress(el: HTMLElement, ms: number, onDone: () => void)
   const onDown = (e: PointerEvent) => {
     if (activePointer !== null) return;
     activePointer = e.pointerId;
+    try {
+      el.releasePointerCapture?.(e.pointerId);
+    } catch {
+      /* ignore */
+    }
     el.style.setProperty('--press-ms', `${ms}ms`);
     el.classList.add('pressing');
     timer = setTimeout(() => {
@@ -24,13 +29,19 @@ export function attachLongPress(el: HTMLElement, ms: number, onDone: () => void)
     if (e.pointerId === activePointer) cancel();
   };
   const onContext = (e: Event) => {
+    // Touch long-press fires contextmenu at ~500ms; just suppress it, don't cancel the hold.
     e.preventDefault();
-    cancel();
+  };
+  const onMove = (e: PointerEvent) => {
+    if (e.pointerId !== activePointer) return;
+    const r = el.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) cancel();
   };
 
   el.addEventListener('pointerdown', onDown);
   el.addEventListener('pointerup', onEnd);
   el.addEventListener('pointerleave', onEnd);
+  el.addEventListener('pointermove', onMove);
   el.addEventListener('pointercancel', onEnd);
   el.addEventListener('contextmenu', onContext);
 
@@ -39,6 +50,7 @@ export function attachLongPress(el: HTMLElement, ms: number, onDone: () => void)
     el.removeEventListener('pointerdown', onDown);
     el.removeEventListener('pointerup', onEnd);
     el.removeEventListener('pointerleave', onEnd);
+    el.removeEventListener('pointermove', onMove);
     el.removeEventListener('pointercancel', onEnd);
     el.removeEventListener('contextmenu', onContext);
   };
