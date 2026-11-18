@@ -1,11 +1,9 @@
 import { NAME_MAX, normalizeName } from '../core/profile';
 import { go, type Route } from '../router';
-import { callName, el, say, type Cleanup, type ScreenDeps } from './dom';
+import { callName, el, type Cleanup, type ScreenDeps } from './dom';
 
 /** 첫 실행 때 한 번: 부모가 아이 이름을 입력한다. 어른용이라 글자 안내를 쓴다. */
 export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Cleanup {
-  let disposed = false;
-
   const input = el('input', 'name-input', [], {
     type: 'text',
     maxlength: String(NAME_MAX),
@@ -35,9 +33,8 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     if (!name) return;
     deps.saveName(name);
     start.disabled = true;
-    void say(deps, `${callName(name)}, 반가워!`).then(() => {
-      if (!disposed) go({ name: 'home' });
-    });
+    deps.announce = `${callName(name)}, 반가워!`;
+    go({ name: 'home' });
   });
 
   root.append(
@@ -45,7 +42,5 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   );
   input.focus();
 
-  return () => {
-    disposed = true;
-  };
+  return () => {};
 }

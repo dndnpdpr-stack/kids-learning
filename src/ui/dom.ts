@@ -11,6 +11,8 @@ export interface ScreenDeps {
   rng: Rng;
   /** 아이 이름 (첫 실행 때 입력). 없으면 null. */
   childName: string | null;
+  /** 다음 화면이 그려진 직후 말할 문장. 화면 전환을 음성 끝까지 기다리지 않게 한다. */
+  announce: string | null;
   /** 이름을 저장하고 childName을 갱신한다. */
   saveName(name: string): void;
 }

@@ -5,7 +5,7 @@ import { loadChildName, saveChildName } from './core/profile';
 import { loadProgress, saveProgress } from './core/progress';
 import { seededRng } from './core/rng';
 import { startRouter, type Route } from './router';
-import type { Cleanup, ScreenDeps } from './ui/dom';
+import { say, type Cleanup, type ScreenDeps } from './ui/dom';
 import * as find from './ui/find';
 import * as home from './ui/home';
 import * as meet from './ui/meet';
@@ -35,6 +35,7 @@ function boot(root: HTMLElement): void {
     speak,
     rng: seededRng(Date.now()),
     childName: loadChildName(),
+    announce: null,
     saveName: (name) => {
       saveChildName(name);
       deps.childName = name;
@@ -48,6 +49,10 @@ function boot(root: HTMLElement): void {
     // 이름이 없으면(첫 실행) 어떤 주소로 들어와도 이름 입력 화면을 먼저 보여 준다.
     const r: Route = deps.childName ? route : { name: 'setup' };
     cleanup = SCREENS[r.name](root, r, deps);
+    // 이전 화면이 남긴 안내(인사, 세계 이름)를 새 화면이 뜬 뒤에 말한다.
+    const text = deps.announce;
+    deps.announce = null;
+    if (text) void say(deps, text);
   });
 }
 

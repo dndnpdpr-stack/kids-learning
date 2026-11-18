@@ -15,6 +15,7 @@ function makeDeps(progress?: Partial<Progress>): ScreenDeps {
     speak: vi.fn(() => Promise.resolve()),
     rng: seededRng(42),
     childName: null,
+    announce: null,
     saveName: vi.fn(),
   };
 }

@@ -13,6 +13,7 @@ function makeDeps(childName: string | null = null): ScreenDeps {
     speak: vi.fn(() => Promise.resolve()),
     rng: seededRng(1),
     childName,
+    announce: null,
     saveName: vi.fn((n: string) => {
       deps.childName = n;
     }),
@@ -63,7 +64,7 @@ describe('setup screen', () => {
     expect(start.disabled).toBe(false);
   });
 
-  it('saves the name, greets, and goes home', async () => {
+  it('saves the name and goes home immediately, leaving the greeting for the next screen', () => {
     const deps = makeDeps();
     cleanup = renderSetup(root, { name: 'setup' }, deps);
     const input = root.querySelector<HTMLInputElement>('[data-testid="name-input"]')!;
@@ -71,10 +72,20 @@ describe('setup screen', () => {
     input.dispatchEvent(new Event('input'));
     root.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     expect(deps.saveName).toHaveBeenCalledWith('하늘');
-    expect(deps.speak).toHaveBeenCalledWith('하늘아, 반가워!', expect.objectContaining({ lang: 'ko-KR' }));
-    await Promise.resolve();
-    await Promise.resolve();
     expect(location.hash).toBe('#/');
+    expect(deps.announce).toBe('하늘아, 반가워!');
+    expect(deps.speak).not.toHaveBeenCalled();
+  });
+});
+
+describe('home world buttons', () => {
+  it('navigate immediately and leave the world name for the next screen', () => {
+    const deps = makeDeps('하늘');
+    cleanup = renderHome(root, { name: 'home' }, deps);
+    root.querySelector<HTMLButtonElement>('[data-world="numbers"]')!.click();
+    expect(location.hash).toBe('#/w/numbers');
+    expect(deps.announce).toBe('숫자');
+    expect(deps.speak).not.toHaveBeenCalled();
   });
 });
 
