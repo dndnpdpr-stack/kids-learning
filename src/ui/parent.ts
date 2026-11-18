@@ -94,10 +94,11 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     el('section', 'screen parent', [
       topBar(null),
       el('div', 'parent-panel', [
-        el('label', 'parent-name-row', ['아이 이름 ', nameInput, nameSave]),
+        el('label', 'parent-row parent-name-row', [el('span', 'parent-key', ['아이 이름']), nameInput, nameSave]),
         info,
-        stars,
-el('label', 'parent-volume', ['볼륨 ', slider]), resetBtn]),
+        el('div', 'parent-row', [stars, el('label', 'parent-volume', [el('span', 'parent-key', ['볼륨']), slider])]),
+        resetBtn,
+      ]),
     ]),
   );
 

@@ -16,9 +16,10 @@ export const numbers: World = {
   title: '숫자',
   mascot: '🐰',
   groups: [
+    // 쉬운 것부터: 1~10 세기 → 1~10 비교 → 합이 10 이하인 더하기 → 11~20 세기
     { id: 'count10', items },
-    { id: 'count20', items: [] },
     { id: 'compare', items: [] },
     { id: 'add', items: [] },
+    { id: 'count20', items: [] },
   ],
 };

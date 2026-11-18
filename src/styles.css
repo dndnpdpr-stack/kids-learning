@@ -602,7 +602,7 @@ section.world-abc .group-card {
 @property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
 @keyframes press-fill { to { --p: 100%; } }
 
-/* 어른용 화면: 내용이 길면 이 영역만 스크롤해서 아래 버튼(진도 초기화)이 잘리지 않게 한다. */
+/* 어른용 화면: 촘촘한 배치로 한 화면에 담는다. 아주 작은 화면에서만 스크롤로 대비한다. */
 .parent-panel {
   flex: 1;
   min-height: 0;
@@ -615,9 +615,6 @@ section.world-abc .group-card {
   font-size: 1.1rem;
 }
 .parent-panel > * { flex: none; }
-.parent-info { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.reset-btn { min-height: 64px; padding: 0 16px; }
-.volume-slider { width: 100%; min-height: 64px; }
 
 /* ---------- 첫 실행: 이름 입력 ---------- */
 .setup { align-items: center; justify-content: center; text-align: center; }
@@ -641,9 +638,6 @@ section.world-abc .group-card {
 .name-start { padding: 0 1.2em; background: #ffe08a; }
 .name-start:disabled { opacity: 0.45; }
 .setup-note { margin: 0; font-size: 1rem; opacity: 0.7; }
-.parent-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.parent-name-row .parent-name { flex: 1; min-width: 8em; font-size: 1.4rem; text-align: left; }
-.name-save-btn { min-height: 64px; padding: 0 16px; font-size: 1.2rem; }
 
 /* 가로로 눕힌 휴대폰처럼 세로가 낮은 화면: 고정 크기 요소를 줄여 한 화면에 담는다. */
 @media (orientation: landscape) and (max-height: 500px) {
@@ -652,3 +646,32 @@ section.world-abc .group-card {
   .choice-btn { width: max(76px, 22vmin); height: max(76px, 22vmin); }
   .glyph-choice { width: max(84px, 26vmin); height: max(84px, 26vmin); }
 }
+
+/* ---------- 부모 메뉴: 한 화면에 모두 보이도록 촘촘하게 (어른용이라 48px 터치 영역) ---------- */
+.parent-panel .btn { font-size: 1.1rem; min-height: 48px; min-width: 48px; padding: 0 14px; box-shadow: none; }
+.parent-row { display: flex; align-items: center; gap: 10px; }
+.parent-key { flex: none; font-size: 1rem; opacity: 0.75; }
+.parent-name-row .parent-name {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  min-height: 48px;
+  font-size: 1.2rem;
+  text-align: left;
+  border-width: 2px;
+}
+.parent-info {
+  list-style: none;
+  margin: 0;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius);
+  font-size: 1rem;
+}
+.parent-stars { margin: 0; flex: none; font-size: 1.2rem; }
+.parent-volume { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.volume-slider { flex: 1; min-width: 0; min-height: 48px; }
+.reset-btn { background: #ffe1e8; }
