@@ -1,0 +1,23 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button,
+.btn {
+  min-width: 64px;
+  min-height: 64px;
+  font-size: 2rem;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+}
