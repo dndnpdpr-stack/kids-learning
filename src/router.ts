@@ -50,14 +50,26 @@ export function toHash(r: Route): string {
   }
 }
 
+let activeHandler: (() => void) | null = null;
+
 export function go(r: Route): void {
-  location.hash = toHash(r);
+  const hash = toHash(r);
+  if (location.hash === hash) {
+    // 주소가 같으면 hashchange가 오지 않는다(예: '#/'에서 이름 입력 후 홈으로). 직접 다시 그린다.
+    activeHandler?.();
+    return;
+  }
+  location.hash = hash;
 }
 
 /** 해시가 바뀔 때마다(그리고 처음 한 번) onRoute를 부른다. 리스너 해제 함수를 돌려준다. */
 export function startRouter(onRoute: (r: Route) => void): () => void {
   const handler = () => onRoute(parseRoute(location.hash));
+  activeHandler = handler;
   window.addEventListener('hashchange', handler);
   handler();
-  return () => window.removeEventListener('hashchange', handler);
+  return () => {
+    window.removeEventListener('hashchange', handler);
+    if (activeHandler === handler) activeHandler = null;
+  };
 }

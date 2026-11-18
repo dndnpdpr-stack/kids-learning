@@ -119,3 +119,17 @@ describe('parent screen name edit', () => {
     expect(deps.saveName).not.toHaveBeenCalled();
   });
 });
+
+describe('go() to the current hash', () => {
+  it('still re-renders (no hashchange fires for an unchanged hash)', async () => {
+    const { startRouter, go } = await import('../../src/router');
+    location.hash = '#/';
+    await new Promise((r) => setTimeout(r, 0));
+    const seen: string[] = [];
+    const stop = startRouter((r) => seen.push(r.name));
+    expect(seen).toEqual(['home']);
+    go({ name: 'home' });
+    expect(seen).toEqual(['home', 'home']);
+    stop();
+  });
+});
