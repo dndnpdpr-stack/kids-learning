@@ -33,7 +33,10 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
     const tiles = items.map((item) =>
       button(item.glyph, () => show(item), 'item-tile', { 'data-item': item.id }),
     );
-    body.append(el('div', 'item-grid', tiles));
+    // 스크롤 없이 한 화면에 들어가도록 거의 정사각형 격자로 배치한다 (10개 → 4×3).
+    const cols = Math.max(1, Math.ceil(Math.sqrt(items.length)));
+    const rows = Math.max(1, Math.ceil(items.length / cols));
+    body.append(el('div', 'item-grid', tiles, { style: `--cols:${cols};--rows:${rows}` }));
 
     function show(item: LearnItem) {
       tiles.forEach((tile) => tile.classList.toggle('selected', tile.dataset.item === item.id));

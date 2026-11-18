@@ -54,10 +54,17 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
     panel.hidden = false;
   }
 
+  /** 스크롤 없이 한 화면에 들어가도록 가로/세로 화면별 격자 크기 (가로: 2줄, 세로: 정사각형에 가깝게). */
+  function gridVars(n: number): string {
+    const lc = Math.max(1, Math.ceil(n / 2));
+    const pc = Math.max(1, Math.ceil(Math.sqrt(n)));
+    return `--lcols:${lc};--lrows:${Math.ceil(n / lc)};--pcols:${pc};--prows:${Math.ceil(n / pc)}`;
+  }
+
   root.append(
     el('section', `screen world world-${worldId}`, [
       topBar(null, el('span', 'world-mascot', [world.mascot])),
-      el('div', 'group-grid', cards),
+      el('div', 'group-grid', cards, { style: gridVars(cards.length) }),
       panel,
     ]),
   );

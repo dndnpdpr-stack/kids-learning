@@ -179,20 +179,32 @@ section.world-abc {
   margin-left: auto;
 }
 
+/* 남은 공간을 격자로 나눠 카드가 모두 한 화면에 들어가게 한다 (스크롤 없음). */
 .group-grid {
+  --cols: var(--pcols, 3);
+  --rows: var(--prows, 3);
   flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(max(110px, 22vmin), 1fr));
-  gap: 3vmin;
-  align-content: start;
-  overflow-y: auto;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: 2.5vmin;
   padding: 1vmin;
+}
+
+@media (orientation: landscape) {
+  .group-grid {
+    --cols: var(--lcols, 4);
+    --rows: var(--lrows, 2);
+  }
 }
 
 .group-card {
   position: relative;
-  aspect-ratio: 1;
-  font-size: max(1.8rem, 8vmin);
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  font-size: max(1.6rem, 8vmin);
   background: var(--card);
 }
 
@@ -282,20 +294,39 @@ section.world-abc .group-card {
   line-height: 1;
 }
 
+/* 격자 전체를 cols:rows 비율로 맞춰 남은 공간 안에 통째로 넣는다 (스크롤 없음). */
 .item-grid {
+  --cols: 3;
+  --rows: 4;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(max(var(--touch), 15vmin), 1fr));
-  gap: 2.5vmin;
-  max-height: 100%;
-  overflow-y: auto;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  grid-template-rows: repeat(var(--rows), 1fr);
+  gap: 2vmin;
   padding: 1vmin;
   flex: none;
-  width: min(100%, 60vmin);
+  box-sizing: border-box;
+  aspect-ratio: var(--cols) / var(--rows);
+}
+
+@media (orientation: landscape) {
+  .item-grid {
+    height: 100%;
+    max-width: 60%;
+  }
+}
+
+@media (orientation: portrait) {
+  .item-grid {
+    width: 100%;
+    max-height: 55%;
+  }
 }
 
 .item-tile {
-  aspect-ratio: 1;
-  font-size: max(1.8rem, 8vmin);
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  font-size: max(1.4rem, 7vmin);
 }
 
 .item-tile.selected {
@@ -601,3 +632,11 @@ section.world-abc .group-card {
 .parent-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .parent-name-row .parent-name { flex: 1; min-width: 8em; font-size: 1.4rem; text-align: left; }
 .name-save-btn { min-height: 64px; padding: 0 16px; font-size: 1.2rem; }
+
+/* 가로로 눕힌 휴대폰처럼 세로가 낮은 화면: 고정 크기 요소를 줄여 한 화면에 담는다. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .activity-panel { padding: 1vmin; gap: 4vmin; }
+  .activity-btn { width: var(--touch); height: var(--touch); font-size: 2rem; }
+  .choice-btn { width: max(76px, 22vmin); height: max(76px, 22vmin); }
+  .glyph-choice { width: max(84px, 26vmin); height: max(84px, 26vmin); }
+}
