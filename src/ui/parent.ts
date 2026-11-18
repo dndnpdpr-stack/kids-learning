@@ -1,4 +1,5 @@
 import { getWorld, type WorldId } from '../content';
+import { NAME_MAX, normalizeName } from '../core/profile';
 import { isGroupUnlocked, resetProgress } from '../core/progress';
 import type { Route } from '../router';
 import { button, el, say, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
@@ -42,6 +43,28 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     void say(deps, '안녕!');
   });
 
+  const nameInput = el('input', 'parent-name', [], {
+    type: 'text',
+    maxlength: String(NAME_MAX),
+    'aria-label': '아이 이름',
+    'data-testid': 'parent-name',
+  });
+  nameInput.value = deps.childName ?? '';
+  const nameSave = button(
+    '이름 저장',
+    () => {
+      const n = normalizeName(nameInput.value);
+      if (!n) {
+        nameInput.value = deps.childName ?? '';
+        return;
+      }
+      deps.saveName(n);
+      nameInput.value = n;
+    },
+    'name-save-btn',
+    { 'data-testid': 'parent-name-save' },
+  );
+
   let confirming = false;
   const resetBtn = button(
     RESET_LABEL,
@@ -70,7 +93,11 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   root.append(
     el('section', 'screen parent', [
       topBar(null),
-      el('div', 'parent-panel', [info, stars, el('label', 'parent-volume', ['볼륨 ', slider]), resetBtn]),
+      el('div', 'parent-panel', [
+        el('label', 'parent-name-row', ['아이 이름 ', nameInput, nameSave]),
+        info,
+        stars,
+el('label', 'parent-volume', ['볼륨 ', slider]), resetBtn]),
     ]),
   );
 

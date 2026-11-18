@@ -1,6 +1,7 @@
 import '@fontsource/jua';
 import './styles.css';
 import { speak, stopSpeaking } from './core/audio';
+import { loadChildName, saveChildName } from './core/profile';
 import { loadProgress, saveProgress } from './core/progress';
 import { seededRng } from './core/rng';
 import { startRouter, type Route } from './router';
@@ -9,6 +10,7 @@ import * as find from './ui/find';
 import * as home from './ui/home';
 import * as meet from './ui/meet';
 import * as parent from './ui/parent';
+import * as setup from './ui/setup';
 import * as trace from './ui/trace';
 import * as world from './ui/world';
 
@@ -23,6 +25,7 @@ const SCREENS: Record<Route['name'], Screen> = {
   find: find.render,
   trace: trace.render,
   parent: parent.render,
+  setup: setup.render,
 };
 
 function boot(root: HTMLElement): void {
@@ -31,13 +34,20 @@ function boot(root: HTMLElement): void {
     save: (p) => saveProgress(p),
     speak,
     rng: seededRng(Date.now()),
+    childName: loadChildName(),
+    saveName: (name) => {
+      saveChildName(name);
+      deps.childName = name;
+    },
   };
   let cleanup: Cleanup = () => {};
   startRouter((route) => {
     cleanup();
     stopSpeaking();
     root.replaceChildren();
-    cleanup = SCREENS[route.name](root, route, deps);
+    // 이름이 없으면(첫 실행) 어떤 주소로 들어와도 이름 입력 화면을 먼저 보여 준다.
+    const r: Route = deps.childName ? route : { name: 'setup' };
+    cleanup = SCREENS[r.name](root, r, deps);
   });
 }
 

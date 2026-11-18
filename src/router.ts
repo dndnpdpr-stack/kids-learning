@@ -6,7 +6,8 @@ export type Route =
   | { name: 'home' }
   | { name: 'world'; world: WorldId }
   | { name: Activity; world: WorldId; group: string }
-  | { name: 'parent' };
+  | { name: 'parent' }
+  | { name: 'setup' };
 
 const WORLDS: readonly WorldId[] = ['hangul', 'numbers', 'abc'];
 const ACTIVITIES: readonly Activity[] = ['meet', 'find', 'trace'];
@@ -19,6 +20,7 @@ export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#?\/?/, '').split('/').filter(Boolean);
   if (parts.length === 0) return { name: 'home' };
   if (parts.length === 1 && parts[0] === 'parent') return { name: 'parent' };
+  if (parts.length === 1 && parts[0] === 'setup') return { name: 'setup' };
   const [w, world, g, group, activity] = parts;
   if (w !== 'w' || !isWorld(world)) return { name: 'home' };
   if (parts.length === 2) return { name: 'world', world };
@@ -39,6 +41,8 @@ export function toHash(r: Route): string {
       return '#/';
     case 'parent':
       return '#/parent';
+    case 'setup':
+      return '#/setup';
     case 'world':
       return `#/w/${r.world}`;
     default:

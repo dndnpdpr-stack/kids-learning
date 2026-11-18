@@ -36,7 +36,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   root.append(
     el('section', 'screen home', [
       el('div', 'home-top', [el('div', 'stars-badge', [`⭐ ${deps.progress.stars}`]), parent]),
-      el('h1', 'app-title', [APP_NAME]),
+      el('h1', 'app-title', [deps.childName ? `${deps.childName}의 ${APP_NAME}` : APP_NAME]),
       el('div', 'world-list', worlds),
     ]),
   );

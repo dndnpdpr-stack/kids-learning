@@ -9,6 +9,10 @@ export interface ScreenDeps {
   save(p: Progress): void;
   speak: typeof speak;
   rng: Rng;
+  /** 아이 이름 (첫 실행 때 입력). 없으면 null. */
+  childName: string | null;
+  /** 이름을 저장하고 childName을 갱신한다. */
+  saveName(name: string): void;
 }
 
 export type Cleanup = () => void;
@@ -66,6 +70,13 @@ export function hasBatchim(word: string): boolean {
 /** 목적격 조사 을/를을 붙인다. */
 export function objectJosa(word: string): string {
   return `${word}${hasBatchim(word) ? '을' : '를'}`;
+}
+
+/** 부르는 말: 받침 있으면 "아", 없으면 "야" (한글이 아니면 그대로). */
+export function callName(name: string): string {
+  const code = name.charCodeAt(name.length - 1);
+  if (!(code >= 0xac00 && code <= 0xd7a3)) return name;
+  return `${name}${hasBatchim(name) ? '아' : '야'}`;
 }
 
 export function say(deps: ScreenDeps, text: string, lang: 'ko-KR' | 'en-US' = 'ko-KR'): Promise<void> {
