@@ -14,7 +14,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   const worlds = WORLD_ORDER.map((id) => {
     const w = getWorld(id);
     return button(
-      el('span', 'mascot', [w.mascot]),
+      [el('span', 'mascot', [w.mascot]), el('span', 'world-label', [w.title])],
       async () => {
         if (leaving) return;
         leaving = true;
