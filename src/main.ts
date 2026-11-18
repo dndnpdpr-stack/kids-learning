@@ -3,7 +3,7 @@ import './styles.css';
 import { speak, stopSpeaking } from './core/audio';
 import { loadChildName, saveChildName } from './core/profile';
 import { loadProgress, saveProgress } from './core/progress';
-import { loadTestMode, saveTestMode } from './core/settings';
+import { isTestMode } from './core/devFlags';
 import { seededRng } from './core/rng';
 import { startRouter, type Route } from './router';
 import { say, type Cleanup, type ScreenDeps } from './ui/dom';
@@ -37,11 +37,7 @@ function boot(root: HTMLElement): void {
     rng: seededRng(Date.now()),
     childName: loadChildName(),
     announce: null,
-    testMode: loadTestMode(),
-    setTestMode: (on) => {
-      saveTestMode(on);
-      deps.testMode = on;
-    },
+    testMode: isTestMode(import.meta.env),
     saveName: (name) => {
       saveChildName(name);
       deps.childName = name;

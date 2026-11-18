@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:test": "vite --host --mode playtest",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "check:precache": "node scripts/check-precache.mjs",

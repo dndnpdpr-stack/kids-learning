@@ -686,6 +686,3 @@ section.world-abc .group-card {
   border: 2px dashed #e0a800;
   font-size: max(1rem, 3.2vmin);
 }
-.test-row { gap: 10px; font-size: 1rem; }
-.test-row small { opacity: 0.7; }
-.test-switch { width: 28px; height: 28px; flex: none; accent-color: #ff7aa2; }

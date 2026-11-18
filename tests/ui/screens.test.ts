@@ -17,7 +17,6 @@ function makeDeps(progress?: Partial<Progress>): ScreenDeps {
     childName: null,
     announce: null,
     testMode: false,
-    setTestMode: vi.fn(),
     saveName: vi.fn(),
   };
 }
