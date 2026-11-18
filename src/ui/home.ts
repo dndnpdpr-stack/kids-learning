@@ -5,7 +5,7 @@ import { button, el, say, type Cleanup, type ScreenDeps } from './dom';
 
 export const APP_NAME = '놀이 학교';
 
-const WORLD_ORDER: WorldId[] = ['hangul', 'numbers', 'abc'];
+const WORLD_ORDER: WorldId[] = ['numbers', 'hangul', 'abc'];
 
 export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Cleanup {
   let disposed = false;
