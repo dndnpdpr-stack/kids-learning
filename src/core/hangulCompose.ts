@@ -44,3 +44,18 @@ export function composeSyllable(cho: string, jung: string): string | null {
   if (choIndex === undefined || jungIndex === undefined) return null;
   return String.fromCharCode(SYLLABLE_BASE + (choIndex * JUNG_COUNT + jungIndex) * JONG_COUNT);
 }
+
+/**
+ * Splits a syllable without 받침 back into [basic consonant, basic vowel] (가 → ['ㄱ','ㅏ']).
+ * Returns null for anything composeSyllable could not have produced.
+ */
+export function decomposeSyllable(syllable: string): [string, string] | null {
+  if (syllable.length !== 1) return null;
+  const offset = syllable.charCodeAt(0) - SYLLABLE_BASE;
+  if (offset < 0 || offset >= 19 * JUNG_COUNT * JONG_COUNT || offset % JONG_COUNT !== 0) return null;
+  const choIndex = Math.floor(offset / (JUNG_COUNT * JONG_COUNT));
+  const jungIndex = (offset / JONG_COUNT) % JUNG_COUNT;
+  const cho = [...CHO_INDEX].find(([, i]) => i === choIndex)?.[0];
+  const jung = [...JUNG_INDEX].find(([, i]) => i === jungIndex)?.[0];
+  return cho && jung ? [cho, jung] : null;
+}

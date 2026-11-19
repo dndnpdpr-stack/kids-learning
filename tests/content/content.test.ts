@@ -13,8 +13,18 @@ describe('content', () => {
   });
   it('hangul group layout', () => {
     const w = getWorld('hangul');
-    expect(w.groups.map((g) => g.id)).toEqual(['c1', 'c2', 'c3', 'c4', 'v1', 'v2', 'v3', 'compose']);
-    expect(sizes('hangul')).toEqual([4, 4, 3, 3, 4, 3, 3, 0]);
+    expect(w.groups.map((g) => g.id)).toEqual(['c1', 'c2', 'c3', 'c4', 'v1', 'v2', 'v3', 's1', 's2', 's3', 's4']);
+    expect(sizes('hangul')).toEqual([4, 4, 3, 3, 4, 3, 3, 4, 4, 3, 3]);
+  });
+  it('hangul syllables 가~하 with picture words starting with the syllable', () => {
+    const w = getWorld('hangul');
+    const items = w.groups.filter((g) => g.id.startsWith('s')).flatMap((g) => g.items);
+    expect(items.map((i) => i.glyph).join('')).toBe('가나다라마바사아자차카타파하');
+    for (const i of items) {
+      expect(i.name).toBe(i.glyph);
+      expect(i.word.startsWith(i.glyph)).toBe(true);
+      expect(i.lang).toBe('ko-KR');
+    }
   });
   it('ids unique across worlds', () => {
     for (const id of ['hangul', 'numbers', 'abc'] as const) {

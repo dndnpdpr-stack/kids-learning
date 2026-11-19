@@ -4,7 +4,7 @@ import { makeFindQuestion, makeNumberQuestion } from '../core/quiz';
 import { go, type Route } from '../router';
 import { CELEBRATE_BIG_MS, CELEBRATE_SMALL_MS, celebrate } from './celebrate';
 import { button, el, objectJosa, say, shake, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
-import { COMPOSE_GROUP, composePool, findGroup } from './groupItems';
+import { findGroup } from './groupItems';
 import { renderNumberQuestion } from './numbers';
 
 export const ROUND_SIZE = 5;
@@ -30,7 +30,7 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
   // 새 말 순서를 시작할 때마다 올린다. 끊긴 말의 .then은 값이 바뀌었으면 이어 말하지 않는다.
   let speechSeq = 0;
 
-  const pool: LearnItem[] = groupId === COMPOSE_GROUP ? composePool() : group.items;
+  const pool: LearnItem[] = group.items;
   const isNumberGroup = world === 'numbers' && NUMBER_KINDS.includes(groupId);
 
   const stage = el('div', 'find-stage');
