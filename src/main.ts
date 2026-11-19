@@ -5,9 +5,13 @@ import { loadChildName, saveChildName } from './core/profile';
 import { loadProgress, saveProgress } from './core/progress';
 import { isTestMode } from './core/devFlags';
 import { seededRng } from './core/rng';
+import { loadPets, savePets } from './pets/state';
 import { startRouter, type Route } from './router';
 import { say, type Cleanup, type ScreenDeps } from './ui/dom';
 import * as find from './ui/find';
+import * as friend from './ui/friend';
+import * as friendPick from './ui/friendPick';
+import * as friendRoom from './ui/friendRoom';
 import * as home from './ui/home';
 import * as meet from './ui/meet';
 import * as parent from './ui/parent';
@@ -27,6 +31,9 @@ const SCREENS: Record<Route['name'], Screen> = {
   trace: trace.render,
   parent: parent.render,
   setup: setup.render,
+  friend: friend.render,
+  friendPick: friendPick.render,
+  friendRoom: friendRoom.render,
 };
 
 function boot(root: HTMLElement): void {
@@ -42,6 +49,8 @@ function boot(root: HTMLElement): void {
       saveChildName(name);
       deps.childName = name;
     },
+    pets: loadPets(),
+    savePets: (p) => savePets(p),
   };
   let cleanup: Cleanup = () => {};
   startRouter((route) => {

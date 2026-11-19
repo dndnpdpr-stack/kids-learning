@@ -1,0 +1,242 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Progress } from '../../src/core/progress';
+import { seededRng } from '../../src/core/rng';
+import { defaultPets, type PetsState } from '../../src/pets/state';
+import { parseRoute, toHash } from '../../src/router';
+import type { ScreenDeps } from '../../src/ui/dom';
+import { render as renderFriend } from '../../src/ui/friend';
+import { render as renderPick } from '../../src/ui/friendPick';
+import { render as renderRoom } from '../../src/ui/friendRoom';
+import { render as renderHome } from '../../src/ui/home';
+import { render as renderParent } from '../../src/ui/parent';
+
+function makeDeps(stars = 0, pets: Partial<PetsState> = {}, progress: Partial<Progress> = {}): ScreenDeps {
+  const deps: ScreenDeps = {
+    progress: { stars, correct: {}, volume: 0.5, ...progress },
+    save: vi.fn(),
+    speak: vi.fn(() => Promise.resolve()),
+    rng: seededRng(7),
+    childName: '하늘',
+    announce: null,
+    testMode: false,
+    saveName: vi.fn(),
+    pets: { ...defaultPets(), ...pets },
+    savePets: vi.fn(),
+  };
+  return deps;
+}
+
+const spoken = (deps: ScreenDeps) => (deps.speak as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
+const q = <T extends Element = HTMLElement>(sel: string) => root.querySelector<T & HTMLElement>(sel)!;
+const tap = (sel: string) => q<HTMLButtonElement>(sel).click();
+
+let root: HTMLElement;
+let cleanup: (() => void) | undefined;
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  root = document.createElement('div');
+  document.body.appendChild(root);
+  location.hash = '';
+});
+
+afterEach(() => {
+  cleanup?.();
+  cleanup = undefined;
+  root.remove();
+  location.hash = '';
+  vi.useRealTimers();
+});
+
+describe('friend routes', () => {
+  it('parses and builds the friend hashes', () => {
+    expect(parseRoute('#/friend')).toEqual({ name: 'friend' });
+    expect(parseRoute('#/friend/pick')).toEqual({ name: 'friendPick' });
+    expect(parseRoute('#/friend/room')).toEqual({ name: 'friendRoom' });
+    expect(parseRoute('#/friend/x')).toEqual({ name: 'home' });
+    expect(toHash({ name: 'friend' })).toBe('#/friend');
+    expect(toHash({ name: 'friendPick' })).toBe('#/friend/pick');
+    expect(toHash({ name: 'friendRoom' })).toBe('#/friend/room');
+  });
+});
+
+describe('home friend button', () => {
+  it('shows the star balance, not the total earned', () => {
+    cleanup = renderHome(root, { name: 'home' }, makeDeps(5, { spent: 2 }));
+    expect(q('.stars-badge').textContent).toBe('⭐ 3');
+  });
+
+  it('shows an egg and goes to pick when there is no friend', () => {
+    cleanup = renderHome(root, { name: 'home' }, makeDeps());
+    expect(q('[data-testid="friend-btn"]').textContent).toContain('🥚');
+    tap('[data-testid="friend-btn"]');
+    expect(location.hash).toBe('#/friend/pick');
+  });
+
+  it('shows the current friend art and goes to the friend screen', () => {
+    cleanup = renderHome(root, { name: 'home' }, makeDeps(0, { current: { kind: 'cat', stage: 1, care: 0 } }));
+    expect(q('[data-testid="friend-btn"] svg.pet.cat')).not.toBeNull();
+    tap('[data-testid="friend-btn"]');
+    expect(location.hash).toBe('#/friend');
+  });
+});
+
+describe('friend pick', () => {
+  it('asks who to befriend and starts the chosen friend', () => {
+    const deps = makeDeps();
+    cleanup = renderPick(root, { name: 'friendPick' }, deps);
+    expect(root.querySelectorAll('[data-kind]').length).toBe(4);
+    expect(spoken(deps)).toContain('누구랑 친구 할까?');
+    tap('[data-kind="dog"]');
+    expect(deps.pets.current).toEqual({ kind: 'dog', stage: 0, care: 0 });
+    expect(deps.savePets).toHaveBeenCalledWith(deps.pets);
+    expect(deps.announce).toBe('멍멍! 반가워!');
+    expect(location.hash).toBe('#/friend');
+  });
+
+  it('folds a pending announcement into the question', () => {
+    const deps = makeDeps();
+    deps.announce = '새 친구를 데려오자!';
+    cleanup = renderPick(root, { name: 'friendPick' }, deps);
+    expect(deps.announce).toBe('새 친구를 데려오자! 누구랑 친구 할까?');
+    expect(deps.speak).not.toHaveBeenCalled();
+  });
+});
+
+describe('friend screen', () => {
+  const dog = (stage: 0 | 1 | 2 | 3 = 0, care = 0) => ({ current: { kind: 'dog' as const, stage, care } });
+
+  it('sends to pick when there is no friend', () => {
+    cleanup = renderFriend(root, { name: 'friend' }, makeDeps());
+    expect(location.hash).toBe('#/friend/pick');
+  });
+
+  it('shows balance, growth dots, five actions and greets', () => {
+    const deps = makeDeps(4, { ...dog(1, 2), spent: 1 });
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    expect(q('[data-testid="balance"]').textContent).toBe('⭐ 3');
+    expect(q('[data-testid="growth"]').querySelectorAll('.dot').length).toBe(5);
+    expect(q('[data-testid="growth"]').querySelectorAll('.dot.on').length).toBe(2);
+    expect(root.querySelectorAll('[data-care]').length).toBe(3);
+    expect(root.querySelectorAll('[data-free]').length).toBe(2);
+    expect(root.querySelectorAll('.star-cost').length).toBe(3);
+    expect(spoken(deps)).toContain('멍멍! 반가워!');
+    expect(root.querySelector('[data-testid="move-btn"]')).toBeNull();
+  });
+
+  it('does not repeat the greeting when it is already announced', () => {
+    const deps = makeDeps(0, dog());
+    deps.announce = '멍멍! 반가워!';
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    expect(deps.speak).not.toHaveBeenCalled();
+  });
+
+  it('with no stars a paid action changes nothing and asks to collect stars', () => {
+    const deps = makeDeps(0, dog());
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    tap('[data-care="eat"]');
+    expect(deps.pets.current).toEqual({ kind: 'dog', stage: 0, care: 0 });
+    expect(deps.pets.spent).toBe(0);
+    expect(deps.savePets).not.toHaveBeenCalled();
+    expect(q('[data-testid="balance"]').classList.contains('shake')).toBe(true);
+    expect(spoken(deps)).toContain('별을 모아 오면 줄 수 있어!');
+  });
+
+  it('three meals grow the friend; a tap during the grow lock is ignored', () => {
+    const deps = makeDeps(5, dog());
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    tap('[data-care="eat"]');
+    tap('[data-care="wash"]');
+    expect(q('[data-testid="balance"]').textContent).toBe('⭐ 3');
+    tap('[data-care="play"]');
+    expect(deps.pets.current).toEqual({ kind: 'dog', stage: 1, care: 0 });
+    expect(deps.pets.spent).toBe(3);
+    expect(deps.savePets).toHaveBeenLastCalledWith(deps.pets);
+    tap('[data-care="eat"]');
+    expect(deps.pets.spent).toBe(3);
+    vi.advanceTimersByTime(1000);
+    expect(spoken(deps)).toContain('와! 강아지가 자랐어!');
+    expect(q('[data-testid="growth"]').querySelectorAll('.dot').length).toBe(5);
+    tap('[data-care="eat"]');
+    expect(deps.pets.spent).toBe(4);
+    expect(deps.pets.current?.care).toBe(1);
+  });
+
+  it('in test mode care is free and badges are hidden', () => {
+    const deps = { ...makeDeps(0, dog()), testMode: true };
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    expect(root.querySelectorAll('.star-cost').length).toBe(0);
+    for (let i = 0; i < 3; i++) tap('[data-care="eat"]');
+    expect(deps.pets.current?.stage).toBe(1);
+    expect(deps.pets.spent).toBe(0);
+  });
+
+  it('free actions cost nothing', () => {
+    const deps = makeDeps(0, dog());
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    tap('[data-free="pet"]');
+    expect(spoken(deps)).toContain('헤헤, 좋아!');
+    tap('[data-free="sleep"]');
+    expect(q('svg.pet').classList.contains('sleeping')).toBe(true);
+    tap('[data-free="sleep"]');
+    expect(q('svg.pet').classList.contains('sleeping')).toBe(false);
+    expect(deps.pets).toEqual({ ...defaultPets(), ...dog() });
+    expect(deps.savePets).not.toHaveBeenCalled();
+  });
+
+  it('a grown friend shows a crown and moves to the room', () => {
+    const deps = makeDeps(0, dog(3));
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    expect(q('[data-testid="growth"]').textContent).toContain('👑');
+    tap('[data-testid="move-btn"]');
+    expect(deps.pets.room).toEqual([{ kind: 'dog' }]);
+    expect(deps.pets.current).toBeNull();
+    expect(deps.savePets).toHaveBeenCalledWith(deps.pets);
+    expect(deps.announce).toBe('새 친구를 데려오자!');
+    expect(location.hash).toBe('#/friend/pick');
+  });
+
+  it('leaves no timers behind after cleanup', () => {
+    const deps = makeDeps(10, dog(0, 2));
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    tap('[data-care="eat"]');
+    tap('[data-free="pet"]');
+    tap('[data-free="sleep"]');
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+    cleanup();
+    cleanup = undefined;
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('friend room', () => {
+  it('shows grown friends that react to a tap', () => {
+    const deps = makeDeps(0, { room: [{ kind: 'dog' }, { kind: 'tree' }, { kind: 'dog' }] });
+    cleanup = renderRoom(root, { name: 'friendRoom' }, deps);
+    const tiles = root.querySelectorAll<HTMLButtonElement>('[data-room]');
+    expect(tiles.length).toBe(3);
+    tiles[1].click();
+    expect(spoken(deps)).toContain('간지러워!');
+    expect(tiles[1].querySelector('svg.pet')!.classList.contains('happy')).toBe(true);
+    cleanup();
+    cleanup = undefined;
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('says how to fill an empty room', () => {
+    const deps = makeDeps();
+    cleanup = renderRoom(root, { name: 'friendRoom' }, deps);
+    expect(spoken(deps)).toContain('친구를 다 키우면 여기로 와요');
+  });
+});
+
+describe('parent reset', () => {
+  it('also resets friends', () => {
+    const deps = makeDeps(5, { spent: 3, current: { kind: 'cat', stage: 2, care: 1 }, room: [{ kind: 'dog' }] });
+    cleanup = renderParent(root, { name: 'parent' }, deps);
+    tap('[data-testid="reset-btn"]');
+    tap('[data-testid="reset-btn"]');
+    expect(deps.pets).toEqual(defaultPets());
+    expect(deps.savePets).toHaveBeenCalledWith(defaultPets());
+  });
+});

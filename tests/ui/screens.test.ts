@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getWorld } from '../../src/content';
 import type { Progress } from '../../src/core/progress';
 import { seededRng } from '../../src/core/rng';
+import { defaultPets } from '../../src/pets/state';
 import { parseRoute } from '../../src/router';
 import { hasBatchim, objectJosa, type ScreenDeps } from '../../src/ui/dom';
 import { render as renderFind } from '../../src/ui/find';
@@ -17,6 +18,8 @@ function makeDeps(progress?: Partial<Progress>): ScreenDeps {
     childName: null,
     announce: null,
     testMode: false,
+    pets: defaultPets(),
+    savePets: vi.fn(),
     saveName: vi.fn(),
   };
 }

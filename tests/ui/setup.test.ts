@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { seededRng } from '../../src/core/rng';
+import { defaultPets } from '../../src/pets/state';
 import { parseRoute } from '../../src/router';
 import { callName, type ScreenDeps } from '../../src/ui/dom';
 import { render as renderHome } from '../../src/ui/home';
@@ -15,6 +16,8 @@ function makeDeps(childName: string | null = null): ScreenDeps {
     childName,
     announce: null,
     testMode: false,
+    pets: defaultPets(),
+    savePets: vi.fn(),
     saveName: vi.fn((n: string) => {
       deps.childName = n;
     }),

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Progress } from '../../src/core/progress';
 import { seededRng } from '../../src/core/rng';
+import { defaultPets } from '../../src/pets/state';
 import type { ScreenDeps } from '../../src/ui/dom';
 import { render as renderHome } from '../../src/ui/home';
 import { attachLongPress } from '../../src/ui/longPress';
@@ -109,6 +110,8 @@ function makeDeps(p?: Partial<Progress>): ScreenDeps {
     childName: null,
     announce: null,
     testMode: false,
+    pets: defaultPets(),
+    savePets: vi.fn(),
     saveName: vi.fn(),
   };
 }

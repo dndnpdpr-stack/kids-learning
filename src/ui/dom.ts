@@ -2,6 +2,7 @@ import type { WorldId } from '../content';
 import type { speak } from '../core/audio';
 import type { Progress } from '../core/progress';
 import type { Rng } from '../core/rng';
+import type { PetsState } from '../pets/state';
 import { go } from '../router';
 
 export interface ScreenDeps {
@@ -17,6 +18,9 @@ export interface ScreenDeps {
   testMode: boolean;
   /** 이름을 저장하고 childName을 갱신한다. */
   saveName(name: string): void;
+  /** 친구 키우기 기록 */
+  pets: PetsState;
+  savePets(p: PetsState): void;
 }
 
 export type Cleanup = () => void;

@@ -1,6 +1,7 @@
 import { getWorld, type WorldId } from '../content';
 import { NAME_MAX, normalizeName } from '../core/profile';
 import { isGroupUnlocked, resetProgress } from '../core/progress';
+import { defaultPets } from '../pets/state';
 import type { Route } from '../router';
 import { button, el, say, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
 
@@ -83,6 +84,8 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
       resetBtn.textContent = RESET_LABEL;
       deps.progress = { ...resetProgress(), volume: deps.progress.volume };
       deps.save(deps.progress);
+      deps.pets = defaultPets();
+      deps.savePets(deps.pets);
       refresh();
     },
     'reset-btn',
