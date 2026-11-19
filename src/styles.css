@@ -13,6 +13,8 @@
   --pink: #ffc8dd;
   --lilac: #e4d7ff;
   --touch: 64px;
+  /* 숫자 보기 버튼 크기 (찾기 화면 그림 크기 계산에도 쓴다) */
+  --choice: max(90px, 24vmin);
 }
 
 * {
@@ -366,19 +368,60 @@ section.world-abc .group-card {
   to { transform: translateX(-8vmin); }
 }
 
-/* ---------- 숫자 묶음 ---------- */
+/* ---------- 숫자 묶음: 5칸/10칸 틀 ----------
+   --cell = 한 칸 크기. 찾기 화면에서는 문제 종류별로 남은 공간에 맞춰 아래(찾기)에서 정한다.
+   틀 하나 너비 ≈ 5.52 × cell, 10칸 틀 높이 ≈ 2.28 × cell, 5칸 틀 높이 ≈ 1.2 × cell. */
 .emoji-group {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  gap: 1vmin;
-  max-width: 60vmin;
-  font-size: 9vmin;
+  gap: calc(var(--cell, 9vmin) * 0.3);
   line-height: 1;
 }
 
-.emoji-group.many {
-  font-size: 6.5vmin;
+@media (orientation: portrait) {
+  .emoji-group.two {
+    flex-direction: column;
+  }
+}
+
+.ten-frame {
+  display: grid;
+  grid-template-columns: repeat(5, var(--cell, 9vmin));
+  grid-auto-rows: var(--cell, 9vmin);
+  gap: calc(var(--cell, 9vmin) * 0.08);
+  padding: calc(var(--cell, 9vmin) * 0.1);
+  border: 2px solid rgba(74, 64, 99, 0.22);
+  border-radius: calc(var(--cell, 9vmin) * 0.25);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.frame-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--cell, 9vmin) * 0.82);
+}
+
+/* 빈칸은 흐린 점 */
+.frame-cell.empty::after {
+  content: '';
+  width: 24%;
+  height: 24%;
+  border-radius: 50%;
+  background: rgba(74, 64, 99, 0.18);
+}
+
+/* 하나 덜: 마지막 하나가 흐려지며 날아간다 (끝나도 흐리게 남아 "가져간 것"을 보여 준다). */
+.frame-cell.leaving {
+  animation: fly-away 1.2s ease-in 0.5s forwards;
+}
+
+@keyframes fly-away {
+  to {
+    transform: translate(35%, -45%) rotate(18deg) scale(0.75);
+    opacity: 0.22;
+  }
 }
 
 /* ---------- 찾기 ---------- */
@@ -404,12 +447,25 @@ section.world-abc .group-card {
   box-shadow: 0 0 2vmin var(--accent);
 }
 
+/* 숫자 문제 그림이 쓸 수 있는 너비(--pw)·높이(--ph: 보기 버튼 줄 제외, --ph-full: 전체).
+   그림 여백(3vmin × 2)과 보기 줄과의 간격을 뺀 값이다. */
 .find-stage {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 0;
+  --pw: calc(100vw - 2 * max(12px, 2.5vmin) - 8vmin);
+  --ph-full: calc(100vh - 4 * max(12px, 2.5vmin) - max(var(--touch), 12vmin) - max(16px, 4vmin) - 8vmin);
+  --ph: calc(var(--ph-full) - var(--choice) - 4vmin);
+}
+
+@supports (container-type: size) {
+  .find-stage {
+    container-type: size;
+    --pw: calc(100cqw - 8vmin);
+    --ph-full: calc(100cqh - 8vmin);
+  }
 }
 
 .choices {
@@ -420,8 +476,8 @@ section.world-abc .group-card {
 }
 
 .choice-btn {
-  width: max(90px, 24vmin);
-  height: max(90px, 24vmin);
+  width: var(--choice);
+  height: var(--choice);
   font-size: max(2.4rem, 13vmin);
 }
 
@@ -437,6 +493,7 @@ section.world-abc .group-card {
   animation: pop 0.4s ease;
 }
 
+/* 그림 위, 보기 버튼 아래. 가로 화면에서도 위아래로 두어야 두 틀(11~20, 더하기)이 나란히 들어간다. */
 .number-question {
   display: flex;
   flex-direction: column;
@@ -445,34 +502,103 @@ section.world-abc .group-card {
   width: 100%;
 }
 
-@media (orientation: landscape) {
-  .number-question:not(.compare) {
-    flex-direction: row;
-    justify-content: center;
-  }
-}
-
 .picture {
   background: rgba(255, 255, 255, 0.7);
   border-radius: var(--radius);
   padding: 3vmin;
 }
 
-.add-row {
+/* 문제 종류별 칸 크기: 남은 너비·높이에 맞추고, 큰 화면에서는 14vmin에서 멈춘다. */
+.number-question.count .picture,
+.number-question.oneMore .picture {
+  --cell: min(var(--pw) / 5.8, var(--ph) / 2.5, 14vmin);
+}
+
+.number-question.count .emoji-group.small {
+  --cell: min(var(--pw) / 5.8, var(--ph) / 1.35, 14vmin);
+}
+
+.number-question.count .emoji-group.two {
+  --cell: min(var(--pw) / 11.8, var(--ph) / 2.5, 14vmin);
+}
+
+.number-question.oneMore .one-more-row:not(.minus) {
+  --cell: min(var(--pw) / 8, var(--ph) / 2.5, 14vmin);
+}
+
+.number-question.add .picture {
+  --cell: min((var(--pw) - 4vmin) / 12.6, var(--ph) / 2.5, 14vmin);
+}
+
+@media (orientation: portrait) {
+  .number-question.count .emoji-group.two {
+    --cell: min(var(--pw) / 5.8, var(--ph) / 5.1, 14vmin);
+  }
+
+  .number-question.add .picture {
+    --cell: min(var(--pw) / 5.8, (var(--ph) - 4vmin) / 5.9, 14vmin);
+  }
+}
+
+.add-row,
+.one-more-row {
   display: flex;
   align-items: center;
   gap: 2vmin;
 }
 
-.add-row .emoji-group {
-  max-width: 30vmin;
+@media (orientation: portrait) {
+  .add-row {
+    flex-direction: column;
+  }
 }
 
 .plus {
-  font-size: 8vmin;
+  font-size: calc(var(--cell, 9vmin) * 0.8);
+  line-height: 1;
+}
+
+/* 하나 더: 틀 옆의 "➕ 🍎" */
+.one-more-hint {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--cell) * 0.1);
+}
+
+.hint-emoji {
+  font-size: calc(var(--cell) * 0.82);
+  line-height: 1;
+  animation: pop 0.6s ease 0.3s both;
+}
+
+/* 빈칸 순서: 큰 숫자 카드 세 장 */
+.seq-row {
+  --seq: min((var(--pw) - 6vmin) / 3, var(--ph) / 1.3, 24vmin);
+  display: flex;
+  gap: 3vmin;
+}
+
+.seq-card {
+  width: var(--seq);
+  height: calc(var(--seq) * 1.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--seq) * 0.7);
+  line-height: 1;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.seq-card.blank {
+  background: #fff3b0;
+  border: max(3px, 0.8vmin) dashed var(--accent);
+  box-shadow: none;
 }
 
 .compare-row {
+  --cell: min((var(--pw) - 8vmin - 8px) / 11.1, var(--ph-full) / 2.4, 14vmin);
   display: flex;
   gap: 4vmin;
   justify-content: center;
@@ -480,6 +606,7 @@ section.world-abc .group-card {
 
 @media (orientation: portrait) {
   .compare-row {
+    --cell: min((var(--pw) - 2vmin) / 5.7, (var(--ph-full) - 10vmin) / 4.7, 14vmin);
     flex-direction: column;
   }
 }
@@ -488,10 +615,6 @@ section.world-abc .group-card {
   padding: 3vmin;
   min-width: 36vmin;
   min-height: 24vmin;
-}
-
-.compare-btn .emoji-group {
-  max-width: 40vmin;
 }
 
 /* ---------- 따라 쓰기 ---------- */
@@ -643,7 +766,7 @@ section.world-abc .group-card {
 @media (orientation: landscape) and (max-height: 500px) {
   .activity-panel { padding: 1vmin; gap: 4vmin; }
   .activity-btn { width: var(--touch); height: var(--touch); font-size: 2rem; }
-  .choice-btn { width: max(76px, 22vmin); height: max(76px, 22vmin); }
+  :root { --choice: max(76px, 22vmin); }
   .glyph-choice { width: max(84px, 26vmin); height: max(84px, 26vmin); }
 }
 
