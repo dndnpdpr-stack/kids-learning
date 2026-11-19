@@ -126,3 +126,18 @@ describe('pets state', () => {
     expect(careProgress({ kind: 'dog', stage: 3, care: 0 })).toBeNull();
   });
 });
+
+import { reconcileSpent } from '../../src/pets/state';
+
+describe('reconcileSpent', () => {
+  it('clamps spent to stars earned', () => {
+    const p = { ...defaultPets(), spent: 9 };
+    expect(reconcileSpent(p, 4).spent).toBe(4);
+    expect(reconcileSpent(p, 0).spent).toBe(0);
+  });
+  it('returns the same object when already consistent', () => {
+    const p = { ...defaultPets(), spent: 3 };
+    expect(reconcileSpent(p, 3)).toBe(p);
+    expect(reconcileSpent(p, 10)).toBe(p);
+  });
+});

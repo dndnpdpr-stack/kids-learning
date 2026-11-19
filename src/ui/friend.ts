@@ -20,7 +20,7 @@ function grewLine(name: string): string {
 export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Cleanup {
   const start = deps.pets.current;
   if (!start) {
-    go({ name: 'friendPick' });
+    go({ name: 'friendPick' }, { replace: true });
     return () => {};
   }
   const kind = start.kind;

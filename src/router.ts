@@ -67,8 +67,13 @@ export function toHash(r: Route): string {
 
 let activeHandler: (() => void) | null = null;
 
-export function go(r: Route): void {
+export function go(r: Route, opts?: { replace?: boolean }): void {
   const hash = toHash(r);
+  if (opts?.replace && location.hash !== hash) {
+    // 리다이렉트는 기록을 쌓지 않는다(뒤로 가기 버튼이 되돌아오지 않게).
+    location.replace(hash);
+    return;
+  }
   if (location.hash === hash) {
     // 주소가 같으면 hashchange가 오지 않는다(예: '#/'에서 이름 입력 후 홈으로). 직접 다시 그린다.
     activeHandler?.();

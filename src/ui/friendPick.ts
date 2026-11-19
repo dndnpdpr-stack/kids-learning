@@ -9,7 +9,7 @@ const ASK = '누구랑 친구 할까?';
 export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Cleanup {
   // 키우는 친구가 있으면 고르지 않는다 (뒤로 가기로 돌아와도 키우던 친구를 덮어쓰지 않게).
   if (deps.pets.current) {
-    go({ name: 'friend' });
+    go({ name: 'friend' }, { replace: true });
     return () => {};
   }
   let leaving = false;

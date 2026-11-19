@@ -71,6 +71,11 @@ export function starBalance(starsEarned: number, p: PetsState): number {
   return Math.max(0, starsEarned - p.spent);
 }
 
+/** 진도 기록만 지워졌을 때 쓴 별이 모은 별보다 많아지지 않게 맞춘다. */
+export function reconcileSpent(p: PetsState, starsEarned: number): PetsState {
+  return p.spent > starsEarned ? { ...p, spent: Math.max(0, starsEarned) } : p;
+}
+
 export function startFriend(p: PetsState, kind: FriendKind): PetsState {
   return { ...p, current: { kind, stage: 0, care: 0 } };
 }

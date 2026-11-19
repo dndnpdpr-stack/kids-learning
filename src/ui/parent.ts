@@ -1,7 +1,7 @@
 import { getWorld, type WorldId } from '../content';
 import { NAME_MAX, normalizeName } from '../core/profile';
 import { isGroupUnlocked, resetProgress } from '../core/progress';
-import { defaultPets } from '../pets/state';
+import { defaultPets, starBalance } from '../pets/state';
 import type { Route } from '../router';
 import { button, el, say, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
 
@@ -26,7 +26,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
         });
       }),
     );
-    stars.textContent = `⭐ ${deps.progress.stars}`;
+    stars.textContent = `모은 별 ⭐ ${deps.progress.stars} · 남은 별 ⭐ ${starBalance(deps.progress.stars, deps.pets)}`;
   };
 
   const slider = el('input', 'volume-slider', [], {

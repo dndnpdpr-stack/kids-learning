@@ -5,7 +5,7 @@ import { loadChildName, saveChildName } from './core/profile';
 import { loadProgress, saveProgress } from './core/progress';
 import { isTestMode } from './core/devFlags';
 import { seededRng } from './core/rng';
-import { loadPets, savePets } from './pets/state';
+import { loadPets, reconcileSpent, savePets } from './pets/state';
 import { startRouter, type Route } from './router';
 import { say, type Cleanup, type ScreenDeps } from './ui/dom';
 import * as find from './ui/find';
@@ -37,8 +37,13 @@ const SCREENS: Record<Route['name'], Screen> = {
 };
 
 function boot(root: HTMLElement): void {
+  const progress = loadProgress();
+  // 진도 기록만 사라진 경우 쓴 별이 모은 별보다 클 수 없다.
+  const loadedPets = loadPets();
+  const pets = reconcileSpent(loadedPets, progress.stars);
+  if (pets !== loadedPets) savePets(pets);
   const deps: ScreenDeps = {
-    progress: loadProgress(),
+    progress,
     save: (p) => saveProgress(p),
     speak,
     rng: seededRng(Date.now()),
@@ -49,7 +54,7 @@ function boot(root: HTMLElement): void {
       saveChildName(name);
       deps.childName = name;
     },
-    pets: loadPets(),
+    pets,
     savePets: (p) => savePets(p),
   };
   let cleanup: Cleanup = () => {};

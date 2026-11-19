@@ -706,7 +706,9 @@ section.world-abc .group-card {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
+  .pet-say { animation: none !important; }
 }
 
 /* 부모 버튼: 누르는 3초 동안 테두리가 차오른다 */

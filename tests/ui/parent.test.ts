@@ -141,7 +141,7 @@ describe('parent screen', () => {
   it('shows unlocked group counts and stars', () => {
     renderParent(root, { name: 'parent' }, makeDeps());
     expect(root.textContent).toMatch(/열린 묶음 2 \/ 전체/);
-    expect(root.textContent).toContain('⭐ 5');
+    expect(root.querySelector("[data-testid=\"parent-stars\"]")!.textContent).toBe("모은 별 ⭐ 5 · 남은 별 ⭐ 5");
   });
 
   it('volume change saves and speaks 안녕!', () => {
