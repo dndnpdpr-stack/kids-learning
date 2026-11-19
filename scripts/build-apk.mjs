@@ -1,4 +1,4 @@
-// 테스트용(debug) APK 빌드: 웹 빌드 → Capacitor 동기화 → Gradle assembleDebug.
+// 테스트용(debug) APK 빌드: 웹 빌드 → Capacitor 동기화 → Gradle assembleDebug. (JDK 21 필요)
 // Capacitor가 Java 21 이상을 요구하므로 Android Studio에 들어 있는 JDK(jbr)를 찾아 이번 빌드에만 쓴다.
 // (사용자 전역 ~/.gradle/gradle.properties 의 org.gradle.java.home 은 건드리지 않고 명령줄로 덮어쓴다.)
 // 다른 위치라면 환경 변수 ANDROID_STUDIO_JBR 로 지정한다.
@@ -6,8 +6,11 @@ import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
+// Gradle 8.14는 Java 25에서 돌지 않으므로 JDK 21을 가장 먼저 찾는다.
 const candidates = [
   process.env.ANDROID_STUDIO_JBR,
+  process.env.JDK21_HOME,
+  'D:/java/temurin-21',
   'D:/Android/Android Studio/jbr',
   'C:/Program Files/Android/Android Studio/jbr',
   process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, 'Programs/Android Studio/jbr'),
