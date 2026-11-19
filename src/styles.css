@@ -843,7 +843,7 @@ section.world-abc .group-card {
   .pet.sleeping .head-g { animation: none; transform: rotate(-6deg); }
   .pet.tree.sleeping .head-g { transform: rotate(-2deg); }
 
-  .pet.shaking .whole { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-shake .12s linear 8; }
+  .pet.shaking .whole { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-shake .6s ease-in-out 3; }
   .pet.jumping .whole { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-jump .55s cubic-bezier(.3,.7,.4,1) 2; }
   .pet.tree.jumping .whole { animation: pet-tree-wiggle .5s ease-in-out 2; }
   .pet.growing .whole { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-grow-pop .7s ease; }
@@ -860,7 +860,7 @@ section.world-abc .group-card {
   @keyframes pet-flap-l { to { transform: rotate(-35deg); } }
   @keyframes pet-flap-r { to { transform: rotate(35deg); } }
   @keyframes pet-chomp { from { transform: scaleY(1); } to { transform: scaleY(.35); } }
-  @keyframes pet-shake { 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+  @keyframes pet-shake { 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
   @keyframes pet-jump { 40% { transform: translateY(-26%) scale(.96, 1.05); } 70% { transform: translateY(0) scale(1.06, .93); } }
   @keyframes pet-grow-pop { 0% { transform: scale(.8); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
 
@@ -868,6 +868,7 @@ section.world-abc .group-card {
   .pet-fx { position: absolute; pointer-events: none; font-size: clamp(1.6rem, 8vmin, 2.6rem); line-height: 1; }
   .pet-fx.food { animation: pet-fly-food .7s ease-in forwards; }
   .pet-fx.float { animation: pet-float-up 1.6s ease-out forwards; }
+  .pet-fx.bubble { animation: pet-float-up 2.4s ease-out forwards; }
   .pet-fx.zzz { animation: pet-zzz 2.2s ease-out forwards; font-size: clamp(1.2rem, 6vmin, 2rem); }
   .pet-fx.cross { animation: pet-cross 1.2s ease-in-out forwards; }
   .pet-fx.sun { animation: pet-sun 1.8s ease-out forwards; font-size: clamp(2.4rem, 12vmin, 3.6rem); }

@@ -97,9 +97,10 @@ export function petFx(stage: HTMLElement, t: Timers, kind: FriendKind, rand: () 
           for (let k = 0; k < 6; k++) fx('float', '✨', 25 + rand() * 50, 30 + rand() * 30, 300 + k * 160, 1600);
           mood('happy', 1800);
         } else {
-          mood('shaking', 1000);
-          for (let k = 0; k < 9; k++) fx('float', '🫧', 20 + rand() * 60, 45 + rand() * 25, k * 140, 1700);
-          t.after(1100, () => mood('happy', 1000));
+          // 천천히 좌우로 살랑 (빠르게 떨면 정신없다는 피드백) + 거품 몇 개가 느긋하게 올라간다.
+          mood('shaking', 1800);
+          for (let k = 0; k < 6; k++) fx('bubble', '🫧', 20 + rand() * 60, 45 + rand() * 25, k * 300, 2500);
+          t.after(1900, () => mood('happy', 1200));
         }
         onLine();
       } else {
