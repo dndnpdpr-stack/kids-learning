@@ -228,3 +228,58 @@ describe('clip resolver', () => {
     expect(synth.speak).toHaveBeenCalled();
   });
 });
+
+import { setNativeTts, type NativeTts } from '../../src/core/audio';
+
+describe('native TTS engine (Android app)', () => {
+  let engine: { speak: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn> };
+  let resolvers: Array<() => void>;
+
+  beforeEach(() => {
+    resolvers = [];
+    engine = {
+      speak: vi.fn(() => new Promise<void>((r) => resolvers.push(r))),
+      stop: vi.fn(() => Promise.resolve()),
+    };
+    setNativeTts(engine as unknown as NativeTts);
+  });
+  afterEach(() => setNativeTts(null));
+
+  it('speaks through the native engine instead of speechSynthesis', async () => {
+    let done = false;
+    void speak('기역', { lang: 'ko-KR', volume: 0.5 }).then(() => (done = true));
+    expect(engine.speak).toHaveBeenCalledWith({ text: '기역', lang: 'ko-KR', rate: 0.9, pitch: 1.1, volume: 0.5 });
+    expect(synth.speak).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(done).toBe(false);
+    resolvers[0]();
+    await vi.waitFor(() => expect(done).toBe(true));
+  });
+
+  it('resolves (never rejects) when the engine fails', async () => {
+    engine.speak.mockImplementationOnce(() => Promise.reject(new Error('no korean voice')));
+    await expect(speak('가', { lang: 'ko-KR' })).resolves.toBeUndefined();
+  });
+
+  it('a new speak resolves the previous one without calling stop (engine flushes itself)', async () => {
+    let first = false;
+    void speak('하나', { lang: 'ko-KR' }).then(() => (first = true));
+    void speak('둘', { lang: 'ko-KR' });
+    await vi.waitFor(() => expect(first).toBe(true));
+    expect(engine.stop).not.toHaveBeenCalled();
+    expect(engine.speak).toHaveBeenCalledTimes(2);
+  });
+
+  it('stopSpeaking stops the native engine', () => {
+    void speak('셋', { lang: 'ko-KR' });
+    stopSpeaking();
+    expect(engine.stop).toHaveBeenCalled();
+  });
+
+  it('still falls back to the safety timer if the engine never finishes', async () => {
+    let done = false;
+    void speak('넷', { lang: 'ko-KR' }).then(() => (done = true));
+    vi.advanceTimersByTime('넷'.length * 300 + 1500);
+    await vi.waitFor(() => expect(done).toBe(true));
+  });
+});

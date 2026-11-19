@@ -8,7 +8,22 @@ type ClipResolver = (text: string, lang: string) => string | null;
 
 const DEFAULT_RATE = { 'ko-KR': 0.9, 'en-US': 0.85 } as const;
 
+/**
+ * 앱(Capacitor) 안에서는 WebView의 speechSynthesis가 소리를 내지 않는 경우가 많아,
+ * 휴대폰 자체 음성 엔진을 쓰는 플러그인을 연결한다. speak는 다 읽으면 resolve,
+ * 새 요청이 오면 엔진이 스스로 앞의 발화를 끊는다(flush).
+ */
+export interface NativeTts {
+  speak(o: { text: string; lang: string; rate: number; pitch: number; volume: number }): Promise<void>;
+  stop(): Promise<void>;
+}
+
 let clipResolver: ClipResolver = () => null;
+let nativeTts: NativeTts | null = null;
+
+export function setNativeTts(engine: NativeTts | null): void {
+  nativeTts = engine;
+}
 // Tears down the in-flight utterance/clip and resolves its promise.
 let cancelCurrent: (() => void) | null = null;
 
@@ -16,11 +31,21 @@ export function setClipResolver(fn: ClipResolver): void {
   clipResolver = fn;
 }
 
-export function stopSpeaking(): void {
+/** 진행 중인 발화의 promise를 끝내고 브라우저 음성을 멈춘다. */
+function cancelPrevious(): void {
   cancelCurrent?.();
   cancelCurrent = null;
   try {
     window.speechSynthesis?.cancel();
+  } catch {
+    /* ignore */
+  }
+}
+
+export function stopSpeaking(): void {
+  cancelPrevious();
+  try {
+    void nativeTts?.stop().catch(() => {});
   } catch {
     /* ignore */
   }
@@ -39,7 +64,9 @@ export function pickVoice(voices: SpeechSynthesisVoice[], lang: string): SpeechS
 }
 
 export function speak(text: string, opts: SpeakOptions): Promise<void> {
-  stopSpeaking();
+  // 네이티브 엔진은 새 요청에서 스스로 앞 발화를 끊으므로 stop을 부르지 않는다
+  // (비동기 stop이 늦게 도착해 새 발화를 끊는 일을 막는다).
+  cancelPrevious();
   return new Promise<void>((resolve) => {
     let finished = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -64,6 +91,17 @@ export function speak(text: string, opts: SpeakOptions): Promise<void> {
     const volume = opts.volume ?? 1;
 
     const speakTts = () => {
+      if (nativeTts) {
+        try {
+          nativeTts
+            .speak({ text, lang: opts.lang, rate: opts.rate ?? DEFAULT_RATE[opts.lang], pitch: 1.1, volume })
+            .then(finish, finish);
+          timer = setTimeout(finish, text.length * 300 + 1500);
+        } catch {
+          finish();
+        }
+        return;
+      }
       const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
       if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
         finish();
