@@ -809,3 +809,76 @@ section.world-abc .group-card {
   border: 2px dashed #e0a800;
   font-size: max(1rem, 3.2vmin);
 }
+
+/* ---------- 친구 키우기: 움직임과 효과 ---------- */
+.pet { --nose: #3b2f2f; --pink: #ff9db5; }
+  .pet .body-g { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-breathe 2.4s ease-in-out infinite; }
+  .pet .head-g { transform-box: fill-box; transform-origin: 50% 90%; animation: pet-tilt 5s ease-in-out infinite; }
+  .pet .tail { transform-box: fill-box; transform-origin: 0% 100%; animation: pet-wag .45s ease-in-out infinite alternate; }
+  .pet.cat .tail { animation: pet-sway 1.6s ease-in-out infinite alternate; }
+  .pet .eyes-open { transform-box: fill-box; transform-origin: center; animation: pet-blink 4.2s infinite; }
+  .pet .ear-l, .pet .ear-r { transform-box: fill-box; transform-origin: 50% 0%; }
+  .pet .wing-l { transform-box: fill-box; transform-origin: 90% 20%; }
+  .pet .wing-r { transform-box: fill-box; transform-origin: 10% 20%; }
+  .pet.tree .head-g { animation: pet-tree-sway 3.5s ease-in-out infinite; transform-origin: 50% 100%; }
+  .pet .eyes-happy, .pet .eyes-sleep, .pet .mouth-open { display: none; }
+
+  .pet.happy .eyes-open { display: none; }
+  .pet.happy .eyes-happy { display: inline; }
+  .pet.happy .tail { animation: pet-wag .18s ease-in-out infinite alternate; }
+  .pet.happy .ear-l { animation: pet-flop-l .3s ease-in-out infinite alternate; }
+  .pet.happy .ear-r { animation: pet-flop-r .3s ease-in-out infinite alternate; }
+  .pet.happy .wing-l { animation: pet-flap-l .15s ease-in-out infinite alternate; }
+  .pet.happy .wing-r { animation: pet-flap-r .15s ease-in-out infinite alternate; }
+
+  .pet.eating .mouth-closed { display: none; }
+  .pet.eating .mouth-open { display: inline; transform-box: fill-box; transform-origin: 50% 0%; animation: pet-chomp .22s ease-in-out infinite alternate; }
+
+  .pet.sleeping .eyes-open, .pet.sleeping .eyes-happy { display: none; }
+  .pet.sleeping .eyes-sleep { display: inline; }
+  .pet.sleeping .body-g { animation-duration: 4s; }
+  .pet.sleeping .tail { animation: none; transform: rotate(10deg); }
+  .pet.sleeping .head-g { animation: none; transform: rotate(-6deg); }
+  .pet.tree.sleeping .head-g { transform: rotate(-2deg); }
+
+  .pet.shaking .whole { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-shake .12s linear 8; }
+  .pet.jumping .whole { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-jump .55s cubic-bezier(.3,.7,.4,1) 2; }
+  .pet.tree.jumping .whole { animation: pet-tree-wiggle .5s ease-in-out 2; }
+  .pet.growing .whole { transform-box: fill-box; transform-origin: 50% 100%; animation: pet-grow-pop .7s ease; }
+
+  @keyframes pet-breathe { 50% { transform: scale(1.03, .97); } }
+  @keyframes pet-tilt { 0%, 70%, 100% { transform: rotate(0); } 80% { transform: rotate(-7deg); } 90% { transform: rotate(4deg); } }
+  @keyframes pet-tree-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  @keyframes pet-tree-wiggle { 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+  @keyframes pet-wag { from { transform: rotate(-18deg); } to { transform: rotate(22deg); } }
+  @keyframes pet-sway { from { transform: rotate(-8deg); } to { transform: rotate(10deg); } }
+  @keyframes pet-blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.08); } }
+  @keyframes pet-flop-l { to { transform: rotate(12deg); } }
+  @keyframes pet-flop-r { to { transform: rotate(-12deg); } }
+  @keyframes pet-flap-l { to { transform: rotate(-35deg); } }
+  @keyframes pet-flap-r { to { transform: rotate(35deg); } }
+  @keyframes pet-chomp { from { transform: scaleY(1); } to { transform: scaleY(.35); } }
+  @keyframes pet-shake { 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+  @keyframes pet-jump { 40% { transform: translateY(-26%) scale(.96, 1.05); } 70% { transform: translateY(0) scale(1.06, .93); } }
+  @keyframes pet-grow-pop { 0% { transform: scale(.8); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+  /* ---------- 날아다니는 효과 ---------- */
+  .pet-fx { position: absolute; pointer-events: none; font-size: clamp(1.6rem, 8vmin, 2.6rem); line-height: 1; }
+  .pet-fx.food { animation: pet-fly-food .7s ease-in forwards; }
+  .pet-fx.float { animation: pet-float-up 1.6s ease-out forwards; }
+  .pet-fx.zzz { animation: pet-zzz 2.2s ease-out forwards; font-size: clamp(1.2rem, 6vmin, 2rem); }
+  .pet-fx.cross { animation: pet-cross 1.2s ease-in-out forwards; }
+  .pet-fx.sun { animation: pet-sun 1.8s ease-out forwards; font-size: clamp(2.4rem, 12vmin, 3.6rem); }
+  .pet-fx.spark { animation: pet-spark .9s ease-out forwards; }
+  .pet-say {
+    position: absolute; top: 6%; left: 50%; transform: translateX(-50%);
+    background: #fff; border-radius: 18px; padding: 6px 14px; font-size: clamp(1.1rem, 5vmin, 1.6rem);
+    box-shadow: 0 3px 0 rgba(74,64,99,.12); animation: pet-say 1.4s ease forwards; white-space: nowrap;
+  }
+  @keyframes pet-fly-food { from { transform: translate(-160%, 120%) scale(1.2); opacity: 1; } 85% { opacity: 1; } to { transform: translate(0, 0) scale(.4); opacity: 0; } }
+  @keyframes pet-float-up { from { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(-140%) scale(1.15); opacity: 0; } }
+  @keyframes pet-zzz { from { transform: translate(0, 0) scale(.6); opacity: 0; } 20% { opacity: 1; } to { transform: translate(60%, -160%) scale(1.2); opacity: 0; } }
+  @keyframes pet-cross { 0% { transform: translate(-260%, 0); } 30% { transform: translate(-90%, -120%); } 60% { transform: translate(40%, 0); } 100% { transform: translate(240%, -70%); opacity: 0; } }
+  @keyframes pet-sun { from { transform: translateY(-40%) scale(.5); opacity: 0; } 25% { opacity: 1; transform: translateY(0) scale(1); } 75% { opacity: 1; } to { opacity: 0; transform: scale(1.2) rotate(30deg); } }
+  @keyframes pet-spark { from { transform: translate(0, 0) scale(.4); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: 0; } }
+  @keyframes pet-say { 0% { opacity: 0; transform: translate(-50%, 10px); } 15%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
