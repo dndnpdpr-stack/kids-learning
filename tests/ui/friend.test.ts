@@ -162,12 +162,17 @@ describe('friend screen', () => {
     expect(spoken(deps)).toContain('별을 모아 오면 줄 수 있어!');
   });
 
-  it('three meals grow the friend; a tap during the grow lock is ignored', () => {
+  /** 진행 중인 동작이 끝날 만큼 시간을 보낸다 (가장 긴 연출보다 길게). */
+  const settle = () => vi.advanceTimersByTime(3200);
+
+  it('three meals grow the friend; a tap during the grow animation is ignored', () => {
     const deps = makeDeps(5, dog());
     cleanup = renderFriend(root, { name: 'friend' }, deps);
     tap('[data-care="eat"]');
+    settle();
     tap('[data-care="wash"]');
     expect(q('[data-testid="balance"]').textContent).toBe('⭐ 3');
+    settle();
     tap('[data-care="play"]');
     expect(deps.pets.current).toEqual({ kind: 'dog', stage: 1, care: 0 });
     expect(deps.pets.spent).toBe(3);
@@ -177,16 +182,42 @@ describe('friend screen', () => {
     vi.advanceTimersByTime(1000);
     expect(spoken(deps)).toContain('와! 강아지가 자랐어!');
     expect(q('[data-testid="growth"]').querySelectorAll('.dot').length).toBe(5);
+    settle();
     tap('[data-care="eat"]');
     expect(deps.pets.spent).toBe(4);
     expect(deps.pets.current?.care).toBe(1);
+  });
+
+  it('only one action at a time: other taps are ignored until the current one finishes', () => {
+    const deps = makeDeps(5, dog());
+    cleanup = renderFriend(root, { name: 'friend' }, deps);
+    const row = q('.act-row');
+    tap('[data-care="eat"]');
+    expect(row.classList.contains('busy')).toBe(true);
+    tap('[data-care="wash"]');
+    tap('[data-care="play"]');
+    tap('[data-free="pet"]');
+    tap('[data-free="sleep"]');
+    expect(deps.pets.spent).toBe(1);
+    expect(spoken(deps)).not.toContain('헤헤, 좋아!');
+    expect(q('svg.pet').classList.contains('sleeping')).toBe(false);
+    vi.advanceTimersByTime(3099);
+    tap('[data-care="wash"]');
+    expect(deps.pets.spent).toBe(1);
+    vi.advanceTimersByTime(1);
+    expect(row.classList.contains('busy')).toBe(false);
+    tap('[data-care="wash"]');
+    expect(deps.pets.spent).toBe(2);
   });
 
   it('in test mode care is free and badges are hidden', () => {
     const deps = { ...makeDeps(0, dog()), testMode: true };
     cleanup = renderFriend(root, { name: 'friend' }, deps);
     expect(root.querySelectorAll('.star-cost').length).toBe(0);
-    for (let i = 0; i < 3; i++) tap('[data-care="eat"]');
+    for (let i = 0; i < 3; i++) {
+      tap('[data-care="eat"]');
+      settle();
+    }
     expect(deps.pets.current?.stage).toBe(1);
     expect(deps.pets.spent).toBe(0);
   });
@@ -196,8 +227,10 @@ describe('friend screen', () => {
     cleanup = renderFriend(root, { name: 'friend' }, deps);
     tap('[data-free="pet"]');
     expect(spoken(deps)).toContain('헤헤, 좋아!');
+    settle();
     tap('[data-free="sleep"]');
     expect(q('svg.pet').classList.contains('sleeping')).toBe(true);
+    settle();
     tap('[data-free="sleep"]');
     expect(q('svg.pet').classList.contains('sleeping')).toBe(false);
     expect(deps.pets).toEqual({ ...defaultPets(), ...dog() });

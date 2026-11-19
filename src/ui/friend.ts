@@ -9,8 +9,12 @@ const SLEEP_LINE = '코오...';
 const MOVED = '새 친구를 데려오자!';
 /** 반짝이가 퍼진 뒤 새 모습으로 바꾸는 때 */
 const GROW_DRAW_MS = 700;
-/** 자라는 동안 유료 행동을 잠그는 시간 */
-const GROW_LOCK_MS = 1000;
+/** 자라는 연출(반짝이 → 새 모습 → 기뻐하기)이 끝날 때까지 */
+const GROW_LOCK_MS = 2600;
+/** ⭐가 없다는 안내를 되풀이해 누르지 않게 잠깐 쉬는 시간 */
+const NO_STARS_LOCK_MS = 900;
+/** 동작 하나가 끝날 때까지 다른 버튼을 잠그는 시간 (petFx 연출 길이와 맞춘다) */
+const ACTION_MS = { eat: 3100, wash: 3100, play: 1700, pet: 2000, sleep: 1000 } as const;
 const CARE_ORDER: CareKind[] = ['eat', 'wash', 'play'];
 
 function grewLine(name: string): string {
@@ -27,7 +31,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   const info = FRIENDS[kind];
   const t = timers();
   const current = (): Friend => deps.pets.current ?? start;
-  let growLock = false;
+  let busy = false;
 
   const stage = el('div', 'pet-stage');
   const fx = petFx(stage, t, kind, deps.rng);
@@ -42,6 +46,18 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   const growth = el('div', 'growth', [], { 'data-testid': 'growth' });
   const moveSlot = el('div', 'move-slot');
 
+  const actRow = el('div', 'act-row');
+  /** 한 번에 한 동작만: 연출이 끝날 때까지 모든 행동 버튼을 잠그고 흐리게 보여 준다. */
+  const lock = (ms: number) => {
+    busy = true;
+    actRow.classList.add('busy');
+    t.after(ms, () => {
+      busy = false;
+      actRow.classList.remove('busy');
+    });
+  };
+  const actionMs = (act: CareKind) => (act === 'wash' && kind === 'tree' ? 1900 : ACTION_MS[act]);
+
   const paidBtns = CARE_ORDER.map((act) => {
     const c = info.care[act];
     return button(
@@ -54,6 +70,8 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   const petBtn = button(
     [el('span', 'act-icon', ['🖐️']), el('small', 'act-label', ['쓰다듬기'])],
     () => {
+      if (busy) return;
+      lock(ACTION_MS.pet);
       fx.pet();
       line(info.pet.line);
     },
@@ -63,6 +81,8 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   const sleepBtn = button(
     [el('span', 'act-icon', ['😴']), el('small', 'act-label', ['잠자기'])],
     () => {
+      if (busy) return;
+      lock(ACTION_MS.sleep);
       if (fx.toggleSleep()) line(SLEEP_LINE);
     },
     'act-btn',
@@ -102,10 +122,11 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   };
 
   function paid(act: CareKind) {
-    if (growLock) return;
+    if (busy) return;
     const r = paidCare(deps.pets, deps.progress.stars, deps.testMode);
     if (!r.ok) {
       if (r.reason === 'no-stars') {
+        lock(NO_STARS_LOCK_MS);
         shake(balance);
         line(NO_STARS);
       }
@@ -115,11 +136,12 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     deps.savePets(r.pets);
     const c = info.care[act];
     if (!r.grew) {
+      lock(actionMs(act));
       fx.care(act, c.icon, () => line(c.line));
       refresh();
       return;
     }
-    growLock = true;
+    lock(Math.max(actionMs(act), GROW_LOCK_MS));
     balance.textContent = `⭐ ${starBalance(deps.progress.stars, deps.pets)}`;
     fx.care(act, c.icon, () => {});
     fx.sparkle();
@@ -128,9 +150,6 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
       fx.grownPop();
       refresh();
       line(grewLine(info.name));
-    });
-    t.after(GROW_LOCK_MS, () => {
-      growLock = false;
     });
   }
 
@@ -149,7 +168,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
         el('div', 'pet-wrap', [stage]),
         el('div', 'friend-side', [
           el('div', 'growth-row', [growth, moveSlot]),
-          el('div', 'act-row', [...paidBtns, petBtn, sleepBtn]),
+          (actRow.append(...paidBtns, petBtn, sleepBtn), actRow),
         ]),
       ]),
     ]),

@@ -1028,3 +1028,7 @@ section.world-abc .group-card {
 @media (orientation: portrait) {
   .world-btn { width: min(28vmin, 19vh); height: min(28vmin, 19vh); }
 }
+
+/* 친구 화면: 동작 하나가 끝날 때까지 버튼이 잠겨 있음을 흐리게 보여 준다. */
+.act-row.busy .act-btn { opacity: 0.45; filter: grayscale(0.4); transition: opacity 0.2s; }
+.act-row .act-btn { transition: opacity 0.2s; }
