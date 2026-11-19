@@ -95,11 +95,12 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   refresh();
   root.append(
     el('section', 'screen parent', [
-      topBar(null),
+      // 볼륨은 위쪽 오른쪽(🏠와 같은 줄)에 두고, 별 표시는 한 줄을 따로 쓴다 (좁은 화면에서 잘리지 않게).
+      topBar(null, el('label', 'parent-volume', [el('span', 'parent-key', ['🔊 볼륨']), slider])),
       el('div', 'parent-panel', [
         el('label', 'parent-row parent-name-row', [el('span', 'parent-key', ['아이 이름']), nameInput, nameSave]),
         info,
-        el('div', 'parent-row', [stars, el('label', 'parent-volume', [el('span', 'parent-key', ['볼륨']), slider])]),
+        stars,
         resetBtn,
       ]),
     ]),

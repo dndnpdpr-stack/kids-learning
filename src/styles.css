@@ -797,7 +797,7 @@ section.world-abc .group-card {
   font-size: 1rem;
 }
 .parent-stars { margin: 0; flex: none; font-size: 1.2rem; }
-.parent-volume { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.parent-volume { margin-left: auto; flex: 0 1 min(50vw, 260px); display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 1rem; }
 .volume-slider { flex: 1; min-width: 0; min-height: 48px; }
 .reset-btn { background: #ffe1e8; }
 
