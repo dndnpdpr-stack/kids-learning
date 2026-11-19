@@ -122,23 +122,35 @@ button,
   text-shadow: 0 0.6vmin 0 #fff;
 }
 
+/* 세계 버튼은 남은 공간(.world-list 크기)에 맞춰 정한다. 화면 비율이 특이해도
+   (폴드 펼친 화면 같은 정사각형에 가까운 세로 화면) 아래 친구 버튼이 밀려나지 않게 한다. */
 .world-list {
   flex: 1;
+  min-height: 0;
   display: flex;
   gap: 4vmin;
   align-items: center;
   justify-content: center;
+  container-type: size;
 }
 
 @media (orientation: portrait) {
   .world-list {
     flex-direction: column;
   }
+  .world-btn {
+    --s: min(28vmin, 100cqw, calc((100cqh - 8vmin) / 3));
+  }
 }
 
 .world-btn {
-  width: 28vmin;
-  height: 28vmin;
+  /* 가로: 한 줄에 셋 / 세로: 위아래로 셋 — 어느 쪽이든 목록 영역 안에 들어가는 가장 큰 원 */
+  --s: min(28vmin, 100cqh, calc((100cqw - 8vmin) / 3));
+  width: var(--s);
+  height: var(--s);
+  min-width: var(--touch);
+  min-height: var(--touch);
+  flex: none;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -148,12 +160,12 @@ button,
 }
 
 .world-btn .mascot {
-  font-size: 14vmin;
+  font-size: calc(var(--s) * 0.5);
   line-height: 1;
 }
 
 .world-btn .world-label {
-  font-size: max(1.4rem, 5vmin);
+  font-size: max(1rem, calc(var(--s) * 0.18));
   line-height: 1;
 }
 
@@ -1023,10 +1035,6 @@ section.world-abc .group-card {
 @media (orientation: landscape) and (max-height: 500px) {
   .friend-btn { position: absolute; right: max(12px, 2.5vmin); bottom: max(12px, 2.5vmin); }
   .move-btn { width: var(--touch); height: var(--touch); font-size: 2.2rem; }
-}
-/* 세로 화면: 세계 버튼 셋과 내 친구 버튼이 함께 들어가도록 세계 버튼 크기를 화면 높이로도 제한한다. */
-@media (orientation: portrait) {
-  .world-btn { width: min(28vmin, 19vh); height: min(28vmin, 19vh); }
 }
 
 /* 친구 화면: 동작 하나가 끝날 때까지 버튼이 잠겨 있음을 흐리게 보여 준다. */
