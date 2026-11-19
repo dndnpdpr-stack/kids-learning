@@ -52,9 +52,16 @@ describe('content', () => {
   });
   it('numbers', () => {
     const w = getWorld('numbers');
-    expect(w.groups.map((g) => g.id)).toEqual(['count10', 'compare', 'add', 'count20']);
-    expect(w.groups[0].items.map((i) => i.glyph)).toEqual(['1','2','3','4','5','6','7','8','9','10']);
-    expect(sizes('numbers')).toEqual([10, 0, 0, 0]);
+    expect(w.groups.map((g) => g.id)).toEqual(
+      ['count5', 'count10', 'compare5', 'oneMore', 'sequence', 'add5', 'mix10', 'count20'],
+    );
+    expect(w.groups[0].items.map((i) => i.glyph)).toEqual(['1', '2', '3', '4', '5']);
+    expect(w.groups[1].items.map((i) => i.glyph)).toEqual(['6', '7', '8', '9', '10']);
+    expect(w.groups[0].items[0]).toEqual({
+      id: 'num-1', glyph: '1', name: '하나', word: '사과 하나', emoji: '🍎', lang: 'ko-KR',
+    });
+    expect(w.groups[1].items.map((i) => i.name)).toEqual(['여섯', '일곱', '여덟', '아홉', '열']);
+    expect(sizes('numbers')).toEqual([5, 5, 0, 0, 0, 0, 0, 0]);
   });
   it('titles', () => {
     expect(getWorld('hangul').title).toBe('한글');

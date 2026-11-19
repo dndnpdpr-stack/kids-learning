@@ -1,6 +1,7 @@
 import { getWorld, type LearnItem, type WorldId } from '../content';
+import { splitTen } from '../core/koreanNumber';
 import { recordCorrect } from '../core/progress';
-import { makeFindQuestion, makeNumberQuestion } from '../core/quiz';
+import { makeFindQuestion, makeNumberQuestion, type NumberKind, type NumberQuestion } from '../core/quiz';
 import { go, type Route } from '../router';
 import { CELEBRATE_BIG_MS, CELEBRATE_SMALL_MS, celebrate } from './celebrate';
 import { button, el, objectJosa, say, shake, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
@@ -9,8 +10,12 @@ import { renderNumberQuestion } from './numbers';
 
 export const ROUND_SIZE = 5;
 
-type NumberKind = Parameters<typeof makeNumberQuestion>[0];
-const NUMBER_KINDS: readonly string[] = ['count10', 'count20', 'compare', 'add'] satisfies NumberKind[];
+const NUMBER_KINDS: readonly string[] = [
+  'count5', 'count10', 'compare5', 'oneMore', 'sequence', 'add5', 'mix10', 'count20',
+] satisfies NumberKind[];
+
+/** 같은 묶음에서 이만큼 맞히면 문제가 한 단계 어려워진다 (level 1). */
+const LEVEL_UP_CORRECT = 3;
 
 export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Cleanup {
   if (route.name !== 'find') return () => {};
@@ -26,6 +31,7 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
   let solved = 0;
   let questionId = 0;
   let lastTarget: string | null = null;
+  let lastNumberKind: NumberQuestion['kind'] | null = null;
   let replay: () => void = () => {};
   // 새 말 순서를 시작할 때마다 올린다. 끊긴 말의 .then은 값이 바뀌었으면 이어 말하지 않는다.
   let speechSeq = 0;
@@ -75,8 +81,19 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
   }
 
   function nextNumberQuestion(id: number) {
-    const q = makeNumberQuestion(groupId as NumberKind, deps.rng);
-    stage.replaceChildren(renderNumberQuestion(q, (choice, node) => answer(choice === q.answer, node, id)));
+    const kind = groupId as NumberKind;
+    const level = (deps.progress.correct[`numbers/${groupId}`] ?? 0) >= LEVEL_UP_CORRECT ? 1 : 0;
+    let q = makeNumberQuestion(kind, deps.rng, level);
+    // mix10: 비교와 더하기를 번갈아 낸다.
+    for (let i = 0; i < 10 && kind === 'mix10' && q.kind === lastNumberKind; i++) {
+      q = makeNumberQuestion(kind, deps.rng, level);
+    }
+    lastNumberKind = q.kind;
+    // 20까지 세기: 맞히면 "열셋! 열하고 셋!"처럼 10과 나머지로 나눠 말해 준다.
+    const followUp = kind === 'count20' ? splitTen(q.answer) : undefined;
+    stage.replaceChildren(
+      renderNumberQuestion(q, (choice, node) => answer(choice === q.answer, node, id, followUp)),
+    );
     replay = () => {
       speechSeq++;
       void say(deps, q.prompt);
@@ -91,7 +108,35 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
     else nextLetterQuestion(id);
   }
 
-  function answer(ok: boolean, node: HTMLElement, id: number) {
+  /**
+   * 칭찬을 말하고 ms 뒤에 then을 부른다. followUp이 있으면 칭찬 다음에 이어 말하고,
+   * 그 말이 끝날 때까지도 기다려서 다음 문제 안내가 말을 끊지 않게 한다.
+   */
+  function praise(text: string, followUp: string | undefined, ms: number, then: () => void) {
+    const seq = ++speechSeq;
+    const spoken = say(deps, text);
+    if (followUp === undefined) {
+      t.after(ms, then);
+      return;
+    }
+    let timeUp = false;
+    let speechDone = false;
+    const proceed = () => {
+      if (timeUp && speechDone && !disposed) then();
+    };
+    t.after(ms, () => {
+      timeUp = true;
+      proceed();
+    });
+    void spoken
+      .then(() => (!disposed && seq === speechSeq ? say(deps, followUp) : undefined))
+      .then(() => {
+        speechDone = true;
+        proceed();
+      });
+  }
+
+  function answer(ok: boolean, node: HTMLElement, id: number, followUp?: string) {
     if (!current(id)) return;
     if (!ok) {
       shake(node);
@@ -102,7 +147,6 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
       return;
     }
     locked = true;
-    speechSeq++;
     deps.progress = recordCorrect(deps.progress, world, groupId);
     deps.save(deps.progress);
     node.classList.add('correct');
@@ -110,12 +154,10 @@ export function render(root: HTMLElement, route: Route, deps: ScreenDeps): Clean
     solved++;
     if (solved >= ROUND_SIZE) {
       celebrations.push(celebrate(screen, { big: true, mascot: getWorld(world).mascot }));
-      void say(deps, '잘했어!');
-      t.after(CELEBRATE_BIG_MS, () => go({ name: 'world', world }));
+      praise('잘했어!', followUp, CELEBRATE_BIG_MS, () => go({ name: 'world', world }));
     } else {
       celebrations.push(celebrate(screen));
-      void say(deps, '맞았어!');
-      t.after(CELEBRATE_SMALL_MS, next);
+      praise('맞았어!', followUp, CELEBRATE_SMALL_MS, next);
     }
   }
 

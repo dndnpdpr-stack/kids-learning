@@ -14,7 +14,14 @@ export function hasMeet(group: Group): boolean {
   return group.items.length > 0;
 }
 
-const NUMBER_CARD: Record<string, string> = { count20: '🍓🍓', compare: '⚖️', add: '➕' };
+const NUMBER_CARD: Record<string, string> = {
+  compare5: '⚖️',
+  oneMore: '➕1',
+  sequence: '1 2 ?',
+  add5: '➕',
+  mix10: '🔟',
+  count20: '🍓🍓',
+};
 
 /** 세계 화면 카드에 보여 줄 짧은 그림. */
 export function cardLabel(group: Group): string {
