@@ -7,6 +7,11 @@ import { petNode } from './petFx';
 const ASK = '누구랑 친구 할까?';
 
 export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Cleanup {
+  // 키우는 친구가 있으면 고르지 않는다 (뒤로 가기로 돌아와도 키우던 친구를 덮어쓰지 않게).
+  if (deps.pets.current) {
+    go({ name: 'friend' });
+    return () => {};
+  }
   let leaving = false;
   const choices = FRIEND_ORDER.map((kind) =>
     button(
@@ -14,6 +19,10 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
       () => {
         if (leaving) return;
         leaving = true;
+        if (deps.pets.current) {
+          go({ name: 'friend' });
+          return;
+        }
         deps.pets = startFriend(deps.pets, kind);
         deps.savePets(deps.pets);
         deps.announce = FRIENDS[kind].hello;

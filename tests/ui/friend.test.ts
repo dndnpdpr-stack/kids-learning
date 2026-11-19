@@ -94,6 +94,26 @@ describe('friend pick', () => {
     expect(location.hash).toBe('#/friend');
   });
 
+  it('redirects to the friend screen while a friend is being raised (e.g. after a back gesture)', () => {
+    const half = { kind: 'cat' as const, stage: 2 as const, care: 3 };
+    const deps = makeDeps(0, { spent: 7, current: half });
+    cleanup = renderPick(root, { name: 'friendPick' }, deps);
+    expect(location.hash).toBe('#/friend');
+    expect(root.querySelectorAll('[data-kind]').length).toBe(0);
+    expect(deps.pets.current).toEqual(half);
+    expect(deps.speak).not.toHaveBeenCalled();
+  });
+
+  it('ignores a tap if a friend appeared after the screen was drawn', () => {
+    const deps = makeDeps();
+    cleanup = renderPick(root, { name: 'friendPick' }, deps);
+    const half = { kind: 'cat' as const, stage: 2 as const, care: 3 };
+    deps.pets = { ...deps.pets, current: half };
+    tap('[data-kind="dog"]');
+    expect(deps.pets.current).toEqual(half);
+    expect(deps.savePets).not.toHaveBeenCalled();
+  });
+
   it('folds a pending announcement into the question', () => {
     const deps = makeDeps();
     deps.announce = '새 친구를 데려오자!';
@@ -188,6 +208,8 @@ describe('friend screen', () => {
     const deps = makeDeps(0, dog(3));
     cleanup = renderFriend(root, { name: 'friend' }, deps);
     expect(q('[data-testid="growth"]').textContent).toContain('👑');
+    expect(q('[data-testid="move-btn"]').textContent).toBe('🚚');
+    expect(q('[data-testid="room-btn"]').textContent).toBe('🧸');
     tap('[data-testid="move-btn"]');
     expect(deps.pets.room).toEqual([{ kind: 'dog' }]);
     expect(deps.pets.current).toBeNull();

@@ -34,7 +34,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
 
   const body = tiles.length
     ? el('div', 'room-grid', tiles)
-    : el('div', 'room-empty', ['🏡']);
+    : el('div', 'room-empty', ['🧸']);
   if (tiles.length) {
     const cols = gridCols(tiles.length);
     body.style.setProperty('--cols', String(cols));

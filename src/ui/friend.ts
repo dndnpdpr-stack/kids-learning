@@ -70,7 +70,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   );
 
   const moveBtn = button(
-    '🏡',
+    '🚚',
     () => {
       deps.pets = moveToRoom(deps.pets);
       deps.savePets(deps.pets);
@@ -140,7 +140,10 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
       topBar(
         null,
         balance,
-        button('🏡', () => go({ name: 'friendRoom' }), 'icon-btn room-btn', { 'aria-label': '친구 방' }),
+        button('🧸', () => go({ name: 'friendRoom' }), 'icon-btn room-btn', {
+          'data-testid': 'room-btn',
+          'aria-label': '친구 방',
+        }),
       ),
       el('div', 'friend-main', [
         el('div', 'pet-wrap', [stage]),
