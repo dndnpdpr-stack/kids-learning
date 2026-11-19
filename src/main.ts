@@ -1,4 +1,7 @@
 import '@fontsource/jua';
+// 부모 메뉴(어른용 화면)는 읽기 편한 고딕체를 쓴다. 보통·굵게 두 굵기만 포함.
+import '@fontsource/noto-sans-kr/400.css';
+import '@fontsource/noto-sans-kr/700.css';
 import './styles.css';
 import { speak, stopSpeaking } from './core/audio';
 import { loadChildName, saveChildName } from './core/profile';

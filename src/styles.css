@@ -1032,3 +1032,16 @@ section.world-abc .group-card {
 /* 친구 화면: 동작 하나가 끝날 때까지 버튼이 잠겨 있음을 흐리게 보여 준다. */
 .act-row.busy .act-btn { opacity: 0.45; filter: grayscale(0.4); transition: opacity 0.2s; }
 .act-row .act-btn { transition: opacity 0.2s; }
+
+/* ---------- 부모 메뉴 글꼴: 어른용 화면이라 읽기 편한 고딕체 ---------- */
+.screen.parent,
+.screen.parent .btn,
+.screen.parent button,
+.screen.parent input,
+.screen.parent label {
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+}
+.screen.parent .parent-panel { font-weight: 400; }
+.screen.parent .reset-btn,
+.screen.parent .name-save-btn,
+.screen.parent .parent-stars { font-weight: 700; }
