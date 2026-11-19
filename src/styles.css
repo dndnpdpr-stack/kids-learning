@@ -134,11 +134,13 @@ button,
   container-type: size;
 }
 
-@media (orientation: portrait) {
+/* 확실히 세로로 긴 화면만 세 개를 위아래로 쌓는다 (폴드 펼친 화면처럼 정사각형에 가까우면 한 줄). */
+@media (max-aspect-ratio: 4/5) {
   .world-list {
     flex-direction: column;
   }
-  .world-btn {
+  /* 기본 .world-btn 규칙보다 앞에 있어도 이기도록 선택자를 더 구체적으로 쓴다. */
+  .world-list .world-btn {
     --s: min(28vmin, 100cqw, calc((100cqh - 8vmin) / 3));
   }
 }
