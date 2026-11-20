@@ -1122,7 +1122,7 @@ section.world-abc .group-card {
 @media (max-aspect-ratio: 4/5) {
   .play-choices .play-choice { --s: min(40vmin, 90cqw, calc((100cqh - 4vmin) / 2)); }
 }
-.play-choice-art { position: relative; width: 70%; flex: 1; min-height: 0; }
+.play-choice-art { position: relative; flex: none; height: 72%; aspect-ratio: 1; }
 .play-choice-art svg { width: 100%; height: 100%; display: block; }
 .play-choice-icon {
   position: absolute;
@@ -1133,7 +1133,7 @@ section.world-abc .group-card {
 }
 .play-choice-label { font-size: max(1rem, calc(var(--s) * 0.11)); }
 
-.play-body { flex: 1; min-height: 0; display: flex; }
+.play-body { flex: 1; min-height: 0; display: flex; container-type: size; }
 
 .fetch-dots { margin-left: auto; display: flex; gap: max(6px, 1.4vmin); }
 .fetch-dot {
@@ -1154,7 +1154,7 @@ section.world-abc .group-card {
   user-select: none;
   border-radius: var(--radius);
   background: linear-gradient(#dff3ff 0 55%, #c9eeb4 55% 100%);
-  --pet: min(26vmin, 220px);
+  --pet: min(42vmin, 320px, 38cqh);
   --toy: max(64px, 12vmin);
 }
 .ball-friend, .ball-toy {
@@ -1234,7 +1234,7 @@ section.world-abc .group-card {
     display: grid;
     grid-template-columns: repeat(2, var(--spot));
     justify-items: center;
-    --spot: max(var(--touch), min(34vmin, calc((100cqw - 4vmin) / 2), 28cqh));
+    --spot: max(var(--touch), min(44vmin, calc((100cqw - 4vmin) / 2), 32cqh));
   }
   .hide-spots .hide-spot:last-child { grid-column: 1 / -1; }
 }
@@ -1277,4 +1277,9 @@ section.world-abc .group-card {
   .hider.hiding { animation-duration: .2s; }
   .hide-spot.hint { animation: none; outline: 4px dashed var(--accent); }
   .peek { animation: none; }
+}
+
+/* 행동 버튼 6개: 세로 화면에서는 3개씩 두 줄로 가지런히 */
+@media (orientation: portrait) {
+  .friend .act-row { max-width: calc(3 * max(var(--touch), 13vmin) + 2 * max(6px, 1.4vmin) + 1px); }
 }
