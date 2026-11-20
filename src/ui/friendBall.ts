@@ -2,7 +2,7 @@ import { koreanCount } from '../core/koreanNumber';
 import { canFetch, dragTarget, throwTarget, toyFor, type Pt } from '../pets/play';
 import { go, type Route } from '../router';
 import { celebrate } from './celebrate';
-import { el, say, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
+import { button, el, say, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
 import { petNode } from './petFx';
 import { showPlayEnd } from './playEnd';
 
@@ -22,6 +22,27 @@ const START_LINE = '던져 줘! 내가 가져올게!';
  * 공 던지기: 공을 밀거나 놀이 공간을 누르면 그쪽으로 던지고, 친구가 물어 와서 센다. 3번 하면 끝.
  * docs/superpowers/specs/2026-11-20-play-together-design.md
  */
+/** 운동장 꾸미기 (누를 수 없음): 해, 구름, 멀리 나무, 골대, 잔디 줄무늬와 흰 선은 CSS. */
+function playground(): HTMLElement[] {
+  const goal = document.createElement('template');
+  goal.innerHTML = `<svg class="pg-goal" viewBox="0 0 100 64" aria-hidden="true">
+    <path d="M8 60 L14 18 L86 18 L92 60" fill="rgba(255,255,255,.35)" stroke="none"/>
+    <g stroke="rgba(255,255,255,.75)" stroke-width="1.2">
+      <path d="M26 18 L22 60 M38 18 L36 60 M50 18 L50 60 M62 18 L64 60 M74 18 L78 60"/>
+      <path d="M12 32 L88 32 M10 46 L90 46"/>
+    </g>
+    <path d="M8 60 L8 6 L92 6 L92 60" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+  </svg>`;
+  return [
+    el('div', 'pg-sun', [], { 'aria-hidden': 'true' }),
+    el('div', 'pg-cloud c1', [], { 'aria-hidden': 'true' }),
+    el('div', 'pg-cloud c2', [], { 'aria-hidden': 'true' }),
+    el('div', 'pg-trees', ['🌳', '🌲', '🌳'], { 'aria-hidden': 'true' }),
+    el('div', 'pg-lines', [], { 'aria-hidden': 'true' }),
+    goal.content.firstElementChild as HTMLElement,
+  ];
+}
+
 export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Cleanup {
   const f = deps.pets.current;
   if (!f) {
@@ -38,7 +59,8 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
 
   const dots = Array.from({ length: TURNS }, () => el('span', 'fetch-dot'));
   const body = el('div', 'play-body');
-  const screen = el('section', 'screen friend-ball', [topBar(null, el('div', 'fetch-dots', dots)), body]);
+  const back = button('⬅', () => go({ name: 'friendPlay' }), 'icon-btn', { 'data-testid': 'play-back', 'aria-label': '뒤로' });
+  const screen = el('section', 'screen friend-ball', [topBar(null, back, el('div', 'fetch-dots', dots)), body]);
   root.append(screen);
 
   function start() {
@@ -51,7 +73,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     const friend = el('div', 'ball-friend', [pet]);
     const toyInner = el('span', 'toy-inner', [toyFor(f!.kind)]);
     const toy = el('div', 'ball-toy', [toyInner], { 'data-testid': 'toy' });
-    const field = el('div', 'ball-field', [friend, toy], { 'data-testid': 'ball-field' });
+    const field = el('div', 'ball-field', [...playground(), friend, toy], { 'data-testid': 'ball-field' });
     body.replaceChildren(field);
 
     const size = () => ({ w: field.clientWidth, h: field.clientHeight });

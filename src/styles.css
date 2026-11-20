@@ -1153,7 +1153,11 @@ section.world-abc .group-card {
   touch-action: none;
   user-select: none;
   border-radius: var(--radius);
-  background: linear-gradient(#dff3ff 0 55%, #c9eeb4 55% 100%);
+  /* 운동장: 하늘(위 42%) + 줄무늬 잔디 */
+  --horizon: 42%;
+  background:
+    linear-gradient(#a9dcff, #def3ff var(--horizon), transparent var(--horizon)),
+    repeating-linear-gradient(90deg, #9fd67f 0 10%, #93cd72 10% 20%);
   --pet: min(42vmin, 320px, 38cqh);
   --toy: max(64px, 12vmin);
 }
@@ -1282,4 +1286,69 @@ section.world-abc .group-card {
 /* 행동 버튼 6개: 세로 화면에서는 3개씩 두 줄로 가지런히 */
 @media (orientation: portrait) {
   .friend .act-row { max-width: calc(3 * max(var(--touch), 13vmin) + 2 * max(6px, 1.4vmin) + 1px); }
+}
+
+/* 운동장 꾸미기: 모두 누를 수 없는 배경 */
+.pg-sun, .pg-cloud, .pg-trees, .pg-lines, .pg-goal { position: absolute; pointer-events: none; }
+.pg-sun {
+  top: 6%;
+  left: 6%;
+  width: min(16vmin, 22cqh);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff6b0 0 45%, #ffd84d 70%);
+  box-shadow: 0 0 6vmin #ffe58a;
+}
+.pg-cloud {
+  width: min(24vmin, 30cqh);
+  height: min(8vmin, 10cqh);
+  border-radius: 999px;
+  background: #fff;
+  opacity: .9;
+}
+.pg-cloud::before, .pg-cloud::after { content: ''; position: absolute; border-radius: 50%; background: #fff; }
+.pg-cloud::before { width: 45%; height: 140%; left: 15%; bottom: 20%; }
+.pg-cloud::after { width: 35%; height: 110%; right: 18%; bottom: 25%; }
+.pg-cloud.c1 { top: 12%; left: 34%; animation: cloud-drift 60s linear infinite alternate; }
+.pg-cloud.c2 { top: 22%; right: 8%; transform: scale(.75); animation: cloud-drift 80s linear infinite alternate-reverse; }
+@keyframes cloud-drift { to { translate: 12vmin 0; } }
+/* 멀리 있는 나무들: 하늘과 잔디가 만나는 곳에 */
+.pg-trees {
+  left: 0;
+  right: 0;
+  top: var(--horizon);
+  transform: translateY(-88%);
+  display: flex;
+  justify-content: space-around;
+  font-size: min(9vmin, 12cqh);
+  line-height: 1;
+  opacity: .85;
+}
+/* 잔디의 흰 선: 먼 쪽 줄 + 가운데 원 */
+.pg-lines {
+  left: 0;
+  right: 0;
+  top: calc(var(--horizon) + 6%);
+  bottom: 0;
+  border-top: 3px solid rgba(255, 255, 255, .8);
+}
+.pg-lines::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: min(46%, 60cqh);
+  aspect-ratio: 3 / 1;
+  transform: translate(-50%, -50%);
+  border: 3px solid rgba(255, 255, 255, .8);
+  border-radius: 50%;
+}
+.pg-goal {
+  right: 5%;
+  top: calc(var(--horizon) + 6%);
+  width: min(26vmin, 30cqh);
+  transform: translateY(-92%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pg-cloud { animation: none !important; }
 }

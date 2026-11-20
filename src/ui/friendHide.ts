@@ -1,4 +1,4 @@
-import { hideSpots, nextHide } from '../pets/play';
+import { canFetch, hideSpots, nextHide } from '../pets/play';
 import { go, type Route } from '../router';
 import { celebrate } from './celebrate';
 import { button, el, say, shake, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
@@ -34,7 +34,10 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   const stops: (() => void)[] = [];
   const dots = Array.from({ length: TURNS }, () => el('span', 'fetch-dot'));
   const body = el('div', 'play-body');
-  const screen = el('section', 'screen friend-hide', [topBar(null, el('div', 'fetch-dots', dots)), body]);
+  // 고르기 화면을 건너뛰는 친구(나무·알)는 친구 화면으로 바로 돌아간다.
+  const backTo: Route = canFetch(f) ? { name: 'friendPlay' } : { name: 'friend' };
+  const back = button('⬅', () => go(backTo), 'icon-btn', { 'data-testid': 'play-back', 'aria-label': '뒤로' });
+  const screen = el('section', 'screen friend-hide', [topBar(null, back, el('div', 'fetch-dots', dots)), body]);
   root.append(screen);
 
   function start() {

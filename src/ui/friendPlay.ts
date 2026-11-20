@@ -28,7 +28,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     );
   root.append(
     el('section', 'screen friend-play', [
-      topBar(null),
+      topBar(null, button('⬅', () => go({ name: 'friend' }), 'icon-btn', { 'data-testid': 'play-back', 'aria-label': '뒤로' })),
       el('div', 'play-choices', [
         choice('play-ball', toyFor(f.kind), '공 던지기', { name: 'friendBall' }),
         choice('play-hide', '🙈', '숨바꼭질', { name: 'friendHide' }),

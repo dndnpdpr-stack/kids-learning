@@ -289,3 +289,27 @@ describe('hide-and-seek', () => {
     expect(location.hash).toBe('#/friend/pick');
   });
 });
+
+describe('back buttons', () => {
+  it('picker → friend, ball → picker, hide → picker (or friend when it cannot walk)', () => {
+    cleanup = renderPlay(root, { name: 'friendPlay' }, makeDeps(dog()));
+    tap('[data-testid="play-back"]');
+    expect(location.hash).toBe('#/friend');
+    cleanup();
+    root.replaceChildren();
+    cleanup = renderBall(root, { name: 'friendBall' }, makeDeps(dog()));
+    tap('[data-testid="play-back"]');
+    expect(location.hash).toBe('#/friend/play');
+    cleanup();
+    root.replaceChildren();
+    location.hash = '';
+    cleanup = renderHide(root, { name: 'friendHide' }, makeDeps(dog()));
+    tap('[data-testid="play-back"]');
+    expect(location.hash).toBe('#/friend/play');
+    cleanup();
+    root.replaceChildren();
+    cleanup = renderHide(root, { name: 'friendHide' }, makeDeps({ kind: 'tree', stage: 1, care: 0 }));
+    tap('[data-testid="play-back"]');
+    expect(location.hash).toBe('#/friend');
+  });
+});
