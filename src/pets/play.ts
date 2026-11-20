@@ -1,7 +1,4 @@
-import { getWorld } from '../content';
-import type { Progress } from '../core/progress';
 import type { Rng } from '../core/rng';
-import { quizSources } from './careQuiz';
 import type { Friend, FriendKind } from './state';
 
 /**
@@ -22,43 +19,16 @@ export function toyFor(kind: FriendKind): string {
   return TOYS[kind];
 }
 
-export interface HideSpot {
-  emoji: string;
-  name: string;
-}
+/** 공원 숨바꼭질의 숨을 곳 (순서 = 화면에 놓는 순서). ask는 누르면 읽어 주는 위치 말. */
+export type ParkSpotId = 'tree' | 'slide' | 'bench' | 'bush' | 'flowers';
 
-const FALLBACK_SPOTS: HideSpot[] = [
-  { emoji: '🌳', name: '나무' },
-  { emoji: '🏠', name: '집' },
-  { emoji: '🚗', name: '자동차' },
-  { emoji: '📦', name: '상자' },
-  { emoji: '🌷', name: '꽃' },
+export const PARK_SPOTS: readonly { id: ParkSpotId; name: string; ask: string }[] = [
+  { id: 'tree', name: '큰 나무', ask: '나무 뒤일까?' },
+  { id: 'slide', name: '미끄럼틀', ask: '미끄럼틀 뒤일까?' },
+  { id: 'bench', name: '벤치', ask: '벤치 밑일까?' },
+  { id: 'bush', name: '덤불', ask: '덤불 속일까?' },
+  { id: 'flowers', name: '꽃밭', ask: '꽃밭 속일까?' },
 ];
-
-function shuffle<T>(items: T[], rng: Rng): T[] {
-  const a = items.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-/** 숨을 곳 n개: 아이가 배운 한글 낱말 그림에서, 모자라면 기본 물건으로 채운다. 이름은 겹치지 않는다. */
-export function hideSpots(p: Progress, rng: Rng, n = 3): HideSpot[] {
-  const hangul = getWorld('hangul');
-  const learned = quizSources(p)
-    .filter((s) => s.world === 'hangul')
-    .flatMap((s) => hangul.groups.find((g) => g.id === s.group)?.items ?? [])
-    .map((i) => ({ emoji: i.emoji, name: i.word }));
-  const unique = [...new Map(learned.map((s) => [s.name, s])).values()];
-  const out = shuffle(unique, rng).slice(0, n);
-  for (const f of shuffle(FALLBACK_SPOTS, rng)) {
-    if (out.length >= n) break;
-    if (!out.some((s) => s.name === f.name)) out.push(f);
-  }
-  return out;
-}
 
 /** 다음에 숨을 곳 (직전 자리는 피한다). */
 export function nextHide(rng: Rng, n: number, last: number | null): number {

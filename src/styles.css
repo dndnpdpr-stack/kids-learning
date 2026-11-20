@@ -1207,80 +1207,121 @@ section.world-abc .group-card {
   .toy-inner.flying { animation: none; }
 }
 
-/* 숨바꼭질: 위쪽은 친구가 숨는 자리, 아래는 숨을 곳 3개 (좁은 세로 화면은 세모꼴) */
-.hide-field {
+/* ---------- 숨바꼭질: 공원 ----------
+   숨을 곳은 공원 안 퍼센트 자리(가로 화면 기준, 세로 화면은 아래에서 바꾼다).
+   숨은 친구(.peeker)는 그림 앞 형제로 깔려 그림에 일부가 가려진다. */
+.park {
+  position: relative;
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3vmin;
+  overflow: hidden;
+  border-radius: var(--radius);
   container-type: size;
+  background:
+    linear-gradient(#a9dcff, #def3ff 34%, transparent 34%),
+    linear-gradient(#a6db86, #8fcb6e);
 }
-.hide-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
-.hider { height: 100%; max-height: min(30vmin, 220px); aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
-.hider svg { width: 100%; height: 100%; display: block; }
-.hider-emoji { font-size: min(22vmin, 160px); line-height: 1; }
-.hider.hiding { animation: hide-away 700ms ease-in forwards; }
-@keyframes hide-away {
-  0% { transform: none; opacity: 1; }
-  40% { transform: translateY(-6%) scale(1.05); opacity: 1; }
-  100% { transform: translateY(80%) scale(0.2); opacity: 0; }
-}
-.hide-spots {
-  flex: none;
-  display: flex;
-  justify-content: center;
-  gap: 4vmin;
-  --spot: max(var(--touch), min(28vmin, calc((100cqw - 8vmin) / 3), 55cqh));
-}
-@media (max-aspect-ratio: 4/5) {
-  .hide-spots {
-    display: grid;
-    grid-template-columns: repeat(2, var(--spot));
-    justify-items: center;
-    --spot: max(var(--touch), min(44vmin, calc((100cqw - 4vmin) / 2), 32cqh));
-  }
-  .hide-spots .hide-spot:last-child { grid-column: 1 / -1; }
-}
-.hide-spot {
-  position: relative;
-  width: var(--spot);
-  height: var(--spot);
-  padding: 0;
-  overflow: visible;
-}
-.spot-emoji { font-size: calc(var(--spot) * 0.62); line-height: 1; }
-.hide-spot.hint { animation: spot-hint 1s ease-in-out infinite; }
-@keyframes spot-hint {
-  0%, 60%, 100% { transform: none; }
-  70% { transform: translateY(-6%) rotate(-4deg); }
-  85% { transform: translateY(-3%) rotate(3deg); }
-}
-.hide-spot.found { background: var(--numbers); }
-.peek {
+.park-path {
   position: absolute;
-  left: 50%;
-  bottom: 55%;
-  width: calc(var(--spot) * 0.9);
-  height: calc(var(--spot) * 0.9);
-  transform: translateX(-50%);
+  left: -10%;
+  right: -10%;
+  top: 62%;
+  height: 22%;
+  border-radius: 50%;
+  background: #ead7aa;
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+.park-spot {
+  position: absolute;
+  padding: 0;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  display: block;
+}
+.park-spot > svg { position: relative; z-index: 1; width: 100%; height: 100%; display: block; }
+.park-spot.found { background: none; }
+.spot-tree    { left: 3%;  top: 10%; width: 24%; height: 64%; }
+.spot-slide   { left: 70%; top: 24%; width: 27%; height: 40%; }
+.spot-bench   { left: 38%; top: 33%; width: 26%; height: 22%; }
+.spot-bush    { left: 29%; bottom: 6%; width: 24%; height: 20%; }
+.spot-flowers { left: 60%; bottom: 6%; width: 30%; height: 16%; }
+@media (max-aspect-ratio: 4/5) {
+  .park { background: linear-gradient(#a9dcff, #def3ff 22%, transparent 22%), linear-gradient(#a6db86, #8fcb6e); }
+  .park-path { top: 56%; height: 16%; }
+  .spot-tree    { left: 4%;  top: 6%;  width: 46%; height: 38%; }
+  .spot-slide   { left: 54%; top: 16%; width: 42%; height: 26%; }
+  .spot-bench   { left: 28%; top: 48%; width: 46%; height: 15%; }
+  .spot-bush    { left: 4%;  bottom: 12%; width: 44%; height: 16%; }
+  .spot-flowers { left: 52%; bottom: 7%; width: 44%; height: 13%; }
+}
+
+/* 반쯤 숨은 친구: 곳마다 보이는 부분이 다르다 (나무 옆, 미끄럼틀 사다리 뒤, 벤치 밑, 덤불·꽃밭 위로 머리) */
+.peeker {
+  position: absolute;
+  z-index: 0;
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  animation: peek-pop 500ms cubic-bezier(.3, 1.6, .5, 1) both;
+  transition: opacity .3s, transform .5s cubic-bezier(.3, 1.6, .5, 1);
+  animation: peek-wiggle 3s ease-in-out infinite;
 }
-.peek svg { width: 100%; height: 100%; display: block; }
-.peek .hider-emoji { font-size: calc(var(--spot) * 0.6); }
-@keyframes peek-pop {
-  from { transform: translate(-50%, 50%) scale(.3); opacity: 0; }
-  to { transform: translateX(-50%); opacity: 1; }
+.peeker svg { width: 100%; height: 100%; display: block; }
+.peeker { container-type: size; }
+.peeker .hider-emoji { font-size: 48cqh; line-height: 1; }
+.peeker.waiting { opacity: 0; animation: none; }
+.spot-tree .peeker    { left: 34%; top: 46%; width: 66%; }
+.spot-slide .peeker   { left: -8%; top: 22%; width: 60%; }
+.spot-bench .peeker   { left: 24%; top: 6%;  height: 118%; }
+.spot-bush .peeker    { left: 20%; top: -80%; height: 140%; }
+.spot-flowers .peeker { left: 14%; top: -110%; height: 165%; }
+.park-spot.hint .peeker { animation: peek-wiggle-big .8s ease-in-out infinite; }
+/* 찾으면 그림 앞으로 튀어나온다 */
+.park-spot.found .peeker { z-index: 2; animation: none; transform: translateY(-35%) scale(1.25); }
+@keyframes peek-wiggle {
+  0%, 78%, 100% { transform: none; }
+  84% { transform: rotate(-6deg); }
+  92% { transform: rotate(5deg); }
+}
+@keyframes peek-wiggle-big {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  30% { transform: rotate(-10deg) translateY(-8%); }
+  70% { transform: rotate(9deg) translateY(-4%); }
+}
+
+/* 숨기 전: 공원 가운데에 친구가 서 있다가 쏙 들어간다 */
+.hider {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: min(36cqmin, 220px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.hider svg { width: 100%; height: 100%; display: block; }
+.hider-emoji { font-size: min(22vmin, 160px); line-height: 1; }
+.hider.hiding { animation: hide-away 700ms ease-in forwards; }
+@keyframes hide-away {
+  0% { opacity: 1; scale: 1; }
+  40% { opacity: 1; scale: 1.08; }
+  100% { opacity: 0; scale: .2; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hider.hiding { animation-duration: .2s; }
-  .hide-spot.hint { animation: none; outline: 4px dashed var(--accent); }
-  .peek { animation: none; }
+  .peeker, .park-spot.hint .peeker { animation: none; }
+  .park-spot.hint .peeker { outline: 4px dashed var(--accent); border-radius: 50%; }
 }
 
 /* 행동 버튼 6개: 세로 화면에서는 3개씩 두 줄로 가지런히 */

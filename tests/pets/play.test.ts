@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { getWorld } from '../../src/content';
-import type { Progress } from '../../src/core/progress';
 import { seededRng } from '../../src/core/rng';
-import { canFetch, dragTarget, hideSpots, nextHide, throwTarget, toyFor } from '../../src/pets/play';
+import { PARK_SPOTS, canFetch, dragTarget, nextHide, throwTarget, toyFor } from '../../src/pets/play';
 
-const prog = (correct: Record<string, number>): Progress => ({ stars: 0, correct, volume: 1 });
 const seeds = Array.from({ length: 100 }, (_, i) => i + 1);
-const FALLBACK = ['🌳', '🏠', '🚗', '📦', '🌷'];
 
 describe('canFetch', () => {
   it('walking friends fetch; trees and unhatched eggs do not', () => {
@@ -25,22 +21,10 @@ describe('toyFor', () => {
   });
 });
 
-describe('hideSpots', () => {
-  it('uses the fallback objects when nothing is learned', () => {
-    const s = hideSpots(prog({}), seededRng(3));
-    expect(s.length).toBe(3);
-    expect(s.every((x) => FALLBACK.includes(x.emoji))).toBe(true);
-    expect(new Set(s.map((x) => x.name)).size).toBe(3);
-  });
-
-  it('uses learned hangul picture words', () => {
-    const c1 = getWorld('hangul').groups[0].items.map((i) => `${i.emoji}|${i.word}`);
-    for (const seed of seeds.slice(0, 50)) {
-      const s = hideSpots(prog({ 'hangul/c1': 1 }), seededRng(seed));
-      expect(s.length).toBe(3);
-      expect(s.every((x) => c1.includes(`${x.emoji}|${x.name}`))).toBe(true);
-      expect(new Set(s.map((x) => x.name)).size).toBe(3);
-    }
+describe('PARK_SPOTS', () => {
+  it('has five places, each asked with a place word', () => {
+    expect(PARK_SPOTS.map((x) => x.id)).toEqual(['tree', 'slide', 'bench', 'bush', 'flowers']);
+    expect(PARK_SPOTS.map((x) => x.ask)).toEqual(['나무 뒤일까?', '미끄럼틀 뒤일까?', '벤치 밑일까?', '덤불 속일까?', '꽃밭 속일까?']);
   });
 });
 
