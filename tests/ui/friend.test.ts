@@ -131,14 +131,14 @@ describe('friend screen', () => {
     expect(location.hash).toBe('#/friend/pick');
   });
 
-  it('shows balance, growth dots, five actions and greets', () => {
+  it('shows balance, growth dots, six actions and greets', () => {
     const deps = makeDeps(4, { ...dog(1, 2), spent: 1 });
     cleanup = renderFriend(root, { name: 'friend' }, deps);
     expect(q('[data-testid="balance"]').textContent).toBe('⭐ 3');
     expect(q('[data-testid="growth"]').querySelectorAll('.dot').length).toBe(5);
     expect(q('[data-testid="growth"]').querySelectorAll('.dot.on').length).toBe(2);
     expect(root.querySelectorAll('[data-care]').length).toBe(3);
-    expect(root.querySelectorAll('[data-free]').length).toBe(2);
+    expect(root.querySelectorAll('[data-free]').length).toBe(3);
     expect(root.querySelectorAll('.star-cost').length).toBe(3);
     expect(spoken(deps)).toContain('멍멍! 반가워!');
     expect(root.querySelector('[data-testid="move-btn"]')).toBeNull();
