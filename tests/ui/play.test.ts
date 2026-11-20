@@ -6,6 +6,7 @@ import { parseRoute, toHash } from '../../src/router';
 import type { ScreenDeps } from '../../src/ui/dom';
 import { render as renderFriend } from '../../src/ui/friend';
 import { BACK_MS, FLY_MS, RUN_MS, render as renderBall } from '../../src/ui/friendBall';
+import { HIDE_MS, NEXT_MS, render as renderHide } from '../../src/ui/friendHide';
 import { render as renderPlay } from '../../src/ui/friendPlay';
 
 function makeDeps(current: Friend | null, stars = 0, progress: Partial<Progress> = {}): ScreenDeps {
@@ -178,6 +179,113 @@ describe('ball throw', () => {
     cleanup();
     location.hash = '';
     cleanup = renderBall(root, { name: 'friendBall' }, makeDeps(null));
+    expect(location.hash).toBe('#/friend/pick');
+  });
+});
+
+describe('hide-and-seek', () => {
+  const spots = () => [...root.querySelectorAll<HTMLButtonElement>('[data-spot]')];
+  const said = (deps: ScreenDeps, text: string) => spoken(deps).filter((x) => x === text).length;
+  /** 숨은 곳을 차례로 눌러 찾는다. 찾은 자리를 돌려준다. */
+  const seek = (deps: ScreenDeps): number => {
+    const before = said(deps, '까꿍!');
+    for (const b of spots()) {
+      b.click();
+      if (said(deps, '까꿍!') > before) return Number(b.dataset.spot);
+    }
+    throw new Error('not found');
+  };
+
+  it('starts with three spots and asks to seek', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderHide(root, { name: 'friendHide' }, deps);
+    expect(spots().length).toBe(3);
+    expect(spoken(deps)).toContain('숨을게! 찾아봐!');
+  });
+
+  it('taps are ignored while the friend is still hiding', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderHide(root, { name: 'friendHide' }, deps);
+    spots().forEach((b) => b.click());
+    expect(said(deps, '까꿍!')).toBe(0);
+    expect(spoken(deps).some((x) => x.includes('여기 없네!'))).toBe(false);
+  });
+
+  it('a wrong spot says its name and 여기 없네; two misses give a hint', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderHide(root, { name: 'friendHide' }, deps);
+    vi.advanceTimersByTime(HIDE_MS);
+    // 먼저 정답 자리를 몰래 알아낸다: 같은 rng로 한 번 더 그려서 찾는다.
+    const probe = makeDeps(dog());
+    const probeRoot = document.createElement('div');
+    const stopProbe = renderHide(probeRoot, { name: 'friendHide' }, probe);
+    vi.advanceTimersByTime(HIDE_MS);
+    const probeSpots = [...probeRoot.querySelectorAll<HTMLButtonElement>('[data-spot]')];
+    let hidden = -1;
+    for (const b of probeSpots) {
+      b.click();
+      if (spoken(probe).includes('까꿍!')) {
+        hidden = Number(b.dataset.spot);
+        break;
+      }
+    }
+    stopProbe();
+    const wrong = spots().filter((b) => Number(b.dataset.spot) !== hidden);
+    const name = wrong[0].getAttribute('aria-label');
+    wrong[0].click();
+    expect(spoken(deps)).toContain(`${name}? 여기 없네!`);
+    expect(wrong[0].classList.contains('shake')).toBe(true);
+    expect(spots()[hidden].classList.contains('hint')).toBe(false);
+    wrong[1].click();
+    expect(spots()[hidden].classList.contains('hint')).toBe(true);
+  });
+
+  it('finding says 까꿍 once; three finds never reuse the last spot and end the game', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderHide(root, { name: 'friendHide' }, deps);
+    const found: number[] = [];
+    for (let turn = 0; turn < 3; turn++) {
+      vi.advanceTimersByTime(HIDE_MS);
+      const i = seek(deps);
+      found.push(i);
+      spots()[i].click();
+      expect(said(deps, '까꿍!')).toBe(turn + 1);
+      vi.advanceTimersByTime(NEXT_MS);
+    }
+    expect(found[1]).not.toBe(found[0]);
+    expect(found[2]).not.toBe(found[1]);
+    vi.advanceTimersByTime(1000);
+    expect(spoken(deps)).toContain('재밌었어! 또 놀자!');
+    expect(q('[data-testid="again"]')).not.toBeNull();
+    expect(deps.savePets).not.toHaveBeenCalled();
+  });
+
+  it('with a tree the butterfly hides', () => {
+    const deps = makeDeps({ kind: 'tree', stage: 2, care: 0 });
+    cleanup = renderHide(root, { name: 'friendHide' }, deps);
+    expect(spoken(deps)).toContain('나비가 숨었어! 찾아봐!');
+    vi.advanceTimersByTime(HIDE_MS);
+    const before = spoken(deps).length;
+    for (const b of spots()) {
+      b.click();
+      if (spoken(deps).includes('찾았다!')) break;
+    }
+    expect(spoken(deps).length).toBeGreaterThan(before);
+    expect(spoken(deps)).toContain('찾았다!');
+  });
+
+  it('leaving mid-turn stops everything', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderHide(root, { name: 'friendHide' }, deps);
+    cleanup();
+    cleanup = undefined;
+    const n = spoken(deps).length;
+    vi.advanceTimersByTime(5000);
+    expect(spoken(deps).length).toBe(n);
+  });
+
+  it('no friend goes to pick', () => {
+    cleanup = renderHide(root, { name: 'friendHide' }, makeDeps(null));
     expect(location.hash).toBe('#/friend/pick');
   });
 });
