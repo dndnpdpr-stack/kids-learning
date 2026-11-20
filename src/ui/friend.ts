@@ -92,6 +92,16 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     { 'data-free': 'sleep', 'aria-label': '잠자기' },
   );
 
+  const playBtn = button(
+    [el('span', 'act-icon', ['🎈']), el('small', 'act-label', ['같이 놀기'])],
+    () => {
+      if (busy) return;
+      go({ name: 'friendPlay' });
+    },
+    'act-btn',
+    { 'data-free': 'play-together', 'aria-label': '같이 놀기' },
+  );
+
   const moveBtn = button(
     '🚚',
     () => {
@@ -193,7 +203,7 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
       el('div', 'pet-wrap', [stage]),
       el('div', 'friend-side', [
         el('div', 'growth-row', [growth, moveSlot]),
-        (actRow.append(...paidBtns, petBtn, sleepBtn), actRow),
+        (actRow.append(...paidBtns, petBtn, sleepBtn, playBtn), actRow),
       ]),
     ]),
   ]);

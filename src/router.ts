@@ -10,7 +10,10 @@ export type Route =
   | { name: 'setup' }
   | { name: 'friend' }
   | { name: 'friendPick' }
-  | { name: 'friendRoom' };
+  | { name: 'friendRoom' }
+  | { name: 'friendPlay' }
+  | { name: 'friendBall' }
+  | { name: 'friendHide' };
 
 const WORLDS: readonly WorldId[] = ['hangul', 'numbers', 'abc'];
 const ACTIVITIES: readonly Activity[] = ['meet', 'find', 'trace'];
@@ -28,6 +31,11 @@ export function parseRoute(hash: string): Route {
     if (parts.length === 1) return { name: 'friend' };
     if (parts.length === 2 && parts[1] === 'pick') return { name: 'friendPick' };
     if (parts.length === 2 && parts[1] === 'room') return { name: 'friendRoom' };
+    if (parts[1] === 'play') {
+      if (parts.length === 2) return { name: 'friendPlay' };
+      if (parts.length === 3 && parts[2] === 'ball') return { name: 'friendBall' };
+      if (parts.length === 3 && parts[2] === 'hide') return { name: 'friendHide' };
+    }
     return { name: 'home' };
   }
   const [w, world, g, group, activity] = parts;
@@ -58,6 +66,12 @@ export function toHash(r: Route): string {
       return '#/friend/pick';
     case 'friendRoom':
       return '#/friend/room';
+    case 'friendPlay':
+      return '#/friend/play';
+    case 'friendBall':
+      return '#/friend/play/ball';
+    case 'friendHide':
+      return '#/friend/play/hide';
     case 'world':
       return `#/w/${r.world}`;
     default:
