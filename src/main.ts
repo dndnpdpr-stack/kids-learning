@@ -14,6 +14,7 @@ import { startRouter, type Route } from './router';
 import { say, type Cleanup, type ScreenDeps } from './ui/dom';
 import * as find from './ui/find';
 import * as friend from './ui/friend';
+import * as friendBall from './ui/friendBall';
 import * as friendPick from './ui/friendPick';
 import * as friendPlay from './ui/friendPlay';
 import * as friendRoom from './ui/friendRoom';
@@ -40,8 +41,8 @@ const SCREENS: Record<Route['name'], Screen> = {
   friendPick: friendPick.render,
   friendRoom: friendRoom.render,
   friendPlay: friendPlay.render,
-  // 놀이 화면이 생기기 전까지는 고르기 화면이 받는다 (Task 3·4에서 바꾼다).
-  friendBall: friendPlay.render,
+  // 숨바꼭질 화면이 생기기 전까지는 고르기 화면이 받는다 (Task 4에서 바꾼다).
+  friendBall: friendBall.render,
   friendHide: friendPlay.render,
 };
 

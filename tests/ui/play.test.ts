@@ -5,6 +5,7 @@ import { defaultPets, type Friend, type PetsState } from '../../src/pets/state';
 import { parseRoute, toHash } from '../../src/router';
 import type { ScreenDeps } from '../../src/ui/dom';
 import { render as renderFriend } from '../../src/ui/friend';
+import { BACK_MS, FLY_MS, RUN_MS, render as renderBall } from '../../src/ui/friendBall';
 import { render as renderPlay } from '../../src/ui/friendPlay';
 
 function makeDeps(current: Friend | null, stars = 0, progress: Partial<Progress> = {}): ScreenDeps {
@@ -98,6 +99,85 @@ describe('game picker', () => {
 
   it('sends to pick when there is no friend', () => {
     cleanup = renderPlay(root, { name: 'friendPlay' }, makeDeps(null));
+    expect(location.hash).toBe('#/friend/pick');
+  });
+});
+
+describe('ball throw', () => {
+  const FETCH = FLY_MS + RUN_MS + BACK_MS;
+  /** 놀이 공간을 누르기 (같은 자리에서 누르고 떼기). */
+  const throwTap = () => {
+    const field = q('[data-testid="ball-field"]');
+    field.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 20 }));
+    field.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 20 }));
+  };
+  const dotsOn = () => root.querySelectorAll('.fetch-dot.on').length;
+
+  it('a tap throws; the friend fetches and counts 하나', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderBall(root, { name: 'friendBall' }, deps);
+    expect(q('[data-testid="toy"]').textContent).toBe('⚽');
+    expect(root.querySelectorAll('.fetch-dot').length).toBe(3);
+    throwTap();
+    vi.advanceTimersByTime(FETCH - 1);
+    expect(spoken(deps)).not.toContain('하나!');
+    vi.advanceTimersByTime(1);
+    expect(spoken(deps)).toContain('하나!');
+    expect(dotsOn()).toBe(1);
+  });
+
+  it('cannot throw again while the friend is fetching', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderBall(root, { name: 'friendBall' }, deps);
+    throwTap();
+    vi.advanceTimersByTime(FLY_MS + 10);
+    throwTap();
+    vi.advanceTimersByTime(FETCH * 2);
+    expect(dotsOn()).toBe(1);
+  });
+
+  it('three fetches end the game; again restarts, back goes to the friend', () => {
+    const deps = makeDeps({ kind: 'cat', stage: 2, care: 0 });
+    cleanup = renderBall(root, { name: 'friendBall' }, deps);
+    expect(q('[data-testid="toy"]').textContent).toBe('🧶');
+    for (let i = 0; i < 3; i++) {
+      throwTap();
+      vi.advanceTimersByTime(FETCH + 50);
+    }
+    expect(spoken(deps)).toEqual(expect.arrayContaining(['하나!', '둘!', '셋!']));
+    vi.advanceTimersByTime(2000);
+    expect(spoken(deps)).toContain('재밌었어! 또 놀자!');
+    tap('[data-testid="again"]');
+    expect(root.querySelector('[data-testid="ball-field"]')).not.toBeNull();
+    expect(dotsOn()).toBe(0);
+    for (let i = 0; i < 3; i++) {
+      throwTap();
+      vi.advanceTimersByTime(FETCH + 50);
+    }
+    vi.advanceTimersByTime(2000);
+    tap('[data-testid="back-friend"]');
+    expect(location.hash).toBe('#/friend');
+    expect(deps.savePets).not.toHaveBeenCalled();
+    expect(deps.save).not.toHaveBeenCalled();
+  });
+
+  it('leaving mid-throw stops everything', () => {
+    const deps = makeDeps(dog());
+    cleanup = renderBall(root, { name: 'friendBall' }, deps);
+    throwTap();
+    vi.advanceTimersByTime(FLY_MS);
+    cleanup();
+    cleanup = undefined;
+    vi.advanceTimersByTime(5000);
+    expect(spoken(deps)).not.toContain('하나!');
+  });
+
+  it('a friend that cannot walk goes to hide-and-seek; no friend goes to pick', () => {
+    cleanup = renderBall(root, { name: 'friendBall' }, makeDeps({ kind: 'tree', stage: 1, care: 0 }));
+    expect(location.hash).toBe('#/friend/play/hide');
+    cleanup();
+    location.hash = '';
+    cleanup = renderBall(root, { name: 'friendBall' }, makeDeps(null));
     expect(location.hash).toBe('#/friend/pick');
   });
 });
