@@ -151,15 +151,88 @@ describe('friend screen', () => {
     expect(deps.speak).not.toHaveBeenCalled();
   });
 
-  it('with no stars a paid action changes nothing and asks to collect stars', () => {
-    const deps = makeDeps(0, dog());
-    cleanup = renderFriend(root, { name: 'friend' }, deps);
-    tap('[data-care="eat"]');
-    expect(deps.pets.current).toEqual({ kind: 'dog', stage: 0, care: 0 });
-    expect(deps.pets.spent).toBe(0);
-    expect(deps.savePets).not.toHaveBeenCalled();
-    expect(q('[data-testid="balance"]').classList.contains('shake')).toBe(true);
-    expect(spoken(deps)).toContain('별을 모아 오면 줄 수 있어!');
+  describe('no stars → quiz', () => {
+    /** 아직 아무것도 안 해 봤으면 1~5 세기 문제가 나온다: 채운 칸 수가 정답. */
+    const answerOf = () => q('.care-quiz').querySelectorAll('.frame-cell.filled').length;
+    const choose = (n: number) => q<HTMLButtonElement>(`.care-quiz [data-choice="${n}"]`).click();
+    const wrongChoice = () =>
+      [...root.querySelectorAll<HTMLButtonElement>('.care-quiz [data-choice]')].find(
+        (b) => Number(b.dataset.choice) !== answerOf(),
+      )!;
+
+    it('opens a quiz instead of caring, and locks the actions', () => {
+      const deps = makeDeps(0, dog());
+      cleanup = renderFriend(root, { name: 'friend' }, deps);
+      tap('[data-care="eat"]');
+      expect(root.querySelector('.care-quiz')).not.toBeNull();
+      expect(deps.pets.current).toEqual({ kind: 'dog', stage: 0, care: 0 });
+      expect(deps.savePets).not.toHaveBeenCalled();
+      expect(q('[data-testid="balance"]').classList.contains('shake')).toBe(true);
+      expect(spoken(deps)).toContain('문제를 맞히면 바로 해 줄게!');
+      expect(q('.act-row').classList.contains('busy')).toBe(true);
+      tap('[data-care="wash"]');
+      expect(root.querySelectorAll('.care-quiz').length).toBe(1);
+    });
+
+    it('a right answer closes the quiz and does that care once without spending stars', () => {
+      const deps = makeDeps(0, dog());
+      cleanup = renderFriend(root, { name: 'friend' }, deps);
+      tap('[data-care="eat"]');
+      choose(answerOf());
+      expect(spoken(deps)).toContain('맞았어!');
+      vi.advanceTimersByTime(900);
+      expect(root.querySelector('.care-quiz')).toBeNull();
+      expect(deps.pets.current).toEqual({ kind: 'dog', stage: 0, care: 1 });
+      expect(deps.pets.spent).toBe(0);
+      expect(deps.savePets).toHaveBeenLastCalledWith(deps.pets);
+      expect(deps.progress.stars).toBe(0);
+      vi.advanceTimersByTime(3200);
+      expect(spoken(deps)).toContain('냠냠! 맛있어!');
+      expect(q('.act-row').classList.contains('busy')).toBe(false);
+    });
+
+    it('quiz care counts toward growing up', () => {
+      const deps = makeDeps(0, dog(0, 2));
+      cleanup = renderFriend(root, { name: 'friend' }, deps);
+      tap('[data-care="play"]');
+      choose(answerOf());
+      vi.advanceTimersByTime(900 + 1000);
+      expect(deps.pets.current).toEqual({ kind: 'dog', stage: 1, care: 0 });
+      expect(spoken(deps)).toContain('와! 강아지가 자랐어!');
+    });
+
+    it('a wrong answer shakes and keeps the same quiz open', () => {
+      const deps = makeDeps(0, dog());
+      cleanup = renderFriend(root, { name: 'friend' }, deps);
+      tap('[data-care="eat"]');
+      const wrong = wrongChoice();
+      wrong.click();
+      expect(wrong.classList.contains('shake')).toBe(true);
+      expect(spoken(deps)).toContain('다시 들어볼까?');
+      vi.advanceTimersByTime(2000);
+      expect(root.querySelector('.care-quiz')).not.toBeNull();
+      expect(deps.pets.current?.care).toBe(0);
+    });
+
+    it('closing the quiz changes nothing and unlocks the actions', () => {
+      const deps = makeDeps(0, dog());
+      cleanup = renderFriend(root, { name: 'friend' }, deps);
+      tap('[data-care="eat"]');
+      tap('[data-testid="quiz-close"]');
+      expect(root.querySelector('.care-quiz')).toBeNull();
+      expect(deps.pets.current?.care).toBe(0);
+      expect(q('.act-row').classList.contains('busy')).toBe(false);
+      tap('[data-care="eat"]');
+      expect(root.querySelector('.care-quiz')).not.toBeNull();
+    });
+
+    it('free actions and a grown friend never ask a quiz', () => {
+      const deps = makeDeps(0, dog(3));
+      cleanup = renderFriend(root, { name: 'friend' }, deps);
+      tap('[data-care="eat"]');
+      tap('[data-free="pet"]');
+      expect(root.querySelector('.care-quiz')).toBeNull();
+    });
   });
 
   /** 진행 중인 동작이 끝날 만큼 시간을 보낸다 (가장 긴 연출보다 길게). */

@@ -1,18 +1,18 @@
+import type { WorldId } from '../content';
+import { makeCareQuiz } from '../pets/careQuiz';
 import { FRIENDS, type CareKind } from '../pets/friends';
-import { careProgress, moveToRoom, paidCare, starBalance, type Friend } from '../pets/state';
+import { careProgress, moveToRoom, paidCare, starBalance, type CareResult, type Friend } from '../pets/state';
 import { go, type Route } from '../router';
 import { button, el, hasBatchim, say, shake, timers, topBar, type Cleanup, type ScreenDeps } from './dom';
+import { openCareQuiz } from './careQuiz';
 import { petFx } from './petFx';
 
-const NO_STARS = '별을 모아 오면 줄 수 있어!';
 const SLEEP_LINE = '코오...';
 const MOVED = '새 친구를 데려오자!';
 /** 반짝이가 퍼진 뒤 새 모습으로 바꾸는 때 */
 const GROW_DRAW_MS = 700;
 /** 자라는 연출(반짝이 → 새 모습 → 기뻐하기)이 끝날 때까지 */
 const GROW_LOCK_MS = 2600;
-/** ⭐가 없다는 안내를 되풀이해 누르지 않게 잠깐 쉬는 시간 */
-const NO_STARS_LOCK_MS = 900;
 /** 동작 하나가 끝날 때까지 다른 버튼을 잠그는 시간 (petFx 연출 길이와 맞춘다) */
 const ACTION_MS = { eat: 3100, wash: 3100, play: 1700, pet: 2000, sleep: 1000 } as const;
 const CARE_ORDER: CareKind[] = ['eat', 'wash', 'play'];
@@ -32,6 +32,9 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   const t = timers();
   const current = (): Friend => deps.pets.current ?? start;
   let busy = false;
+  /** 떠 있는 퀴즈 창을 조용히 치우는 함수 (없으면 null). */
+  let closeQuiz: (() => void) | null = null;
+  let lastQuizWorld: WorldId | null = null;
 
   const stage = el('div', 'pet-stage');
   const fx = petFx(stage, t, kind, deps.rng);
@@ -124,14 +127,37 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   function paid(act: CareKind) {
     if (busy) return;
     const r = paidCare(deps.pets, deps.progress.stars, deps.testMode);
-    if (!r.ok) {
-      if (r.reason === 'no-stars') {
-        lock(NO_STARS_LOCK_MS);
-        shake(balance);
-        line(NO_STARS);
-      }
-      return;
+    if (r.ok) {
+      care(act, r);
+    } else if (r.reason === 'no-stars') {
+      shake(balance);
+      askQuiz(act);
     }
+  }
+
+  /** ⭐가 없으면 배운 것에서 한 문제: 맞히면 ⭐ 없이 그 돌봐주기를 한 번 한다 (성장에도 쳐준다). */
+  function askQuiz(act: CareKind) {
+    busy = true;
+    actRow.classList.add('busy');
+    const unlock = () => {
+      closeQuiz = null;
+      busy = false;
+      actRow.classList.remove('busy');
+    };
+    const quiz = makeCareQuiz(deps.progress, deps.rng, lastQuizWorld);
+    lastQuizWorld = quiz.world;
+    closeQuiz = openCareQuiz(screen, deps, quiz, {
+      face: info.icon,
+      onSolved: () => {
+        unlock();
+        const r = paidCare(deps.pets, deps.progress.stars, true);
+        if (r.ok) care(act, r);
+      },
+      onClose: unlock,
+    });
+  }
+
+  function care(act: CareKind, r: CareResult) {
     deps.pets = r.pets;
     deps.savePets(r.pets);
     const c = info.care[act];
@@ -154,29 +180,31 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
   }
 
   refresh();
-  root.append(
-    el('section', 'screen friend', [
-      topBar(
-        null,
-        balance,
-        button('🧸', () => go({ name: 'friendRoom' }), 'icon-btn room-btn', {
-          'data-testid': 'room-btn',
-          'aria-label': '친구 방',
-        }),
-      ),
-      el('div', 'friend-main', [
-        el('div', 'pet-wrap', [stage]),
-        el('div', 'friend-side', [
-          el('div', 'growth-row', [growth, moveSlot]),
-          (actRow.append(...paidBtns, petBtn, sleepBtn), actRow),
-        ]),
+  const screen = el('section', 'screen friend', [
+    topBar(
+      null,
+      balance,
+      button('🧸', () => go({ name: 'friendRoom' }), 'icon-btn room-btn', {
+        'data-testid': 'room-btn',
+        'aria-label': '친구 방',
+      }),
+    ),
+    el('div', 'friend-main', [
+      el('div', 'pet-wrap', [stage]),
+      el('div', 'friend-side', [
+        el('div', 'growth-row', [growth, moveSlot]),
+        (actRow.append(...paidBtns, petBtn, sleepBtn), actRow),
       ]),
     ]),
-  );
+  ]);
+  root.append(screen);
 
   fx.bubble(info.hello);
   // 고르기 화면에서 넘어오면 인사가 이미 announce로 예약돼 있다.
   if (!deps.announce) void say(deps, info.hello);
 
-  return () => t.clear();
+  return () => {
+    closeQuiz?.();
+    t.clear();
+  };
 }
