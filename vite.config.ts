@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  // 상대 경로로 빌드: 앱(APK)과 GitHub Pages 하위 경로(/kids-learning-game/) 모두에서 열린다.
+  // 상대 경로로 빌드: 앱(APK)과 GitHub Pages 하위 경로(/kids-learning/) 모두에서 열린다.
   base: './',
   plugins: [
     VitePWA({
