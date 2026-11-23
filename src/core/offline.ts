@@ -16,7 +16,8 @@ export interface OfflineEnv {
 export async function setupOffline(env: OfflineEnv): Promise<void> {
   if (!env.sw) return;
   if (!env.isNative) {
-    await env.sw.register('/sw.js', { scope: '/' });
+    // 페이지 옆의 sw.js (상대 경로): GitHub Pages처럼 하위 경로(/kids-learning-game/)에서도 동작한다.
+    await env.sw.register('sw.js', { scope: './' });
     return;
   }
   const regs = await env.sw.getRegistrations();

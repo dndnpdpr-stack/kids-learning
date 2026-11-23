@@ -18,10 +18,10 @@ function env(over: Partial<OfflineEnv> & { regs?: number } = {}) {
 }
 
 describe('setupOffline', () => {
-  it('in the browser, registers the offline cache', async () => {
+  it('in the browser, registers the offline cache next to the page (works under a sub-path like GitHub Pages)', async () => {
     const { e } = env();
     await setupOffline(e);
-    expect(e.sw!.register).toHaveBeenCalledWith('/sw.js', { scope: '/' });
+    expect(e.sw!.register).toHaveBeenCalledWith('sw.js', { scope: './' });
     expect(e.reload).not.toHaveBeenCalled();
   });
 
