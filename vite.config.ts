@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
+      // 등록은 src/core/offline.ts가 한다 (브라우저에서만).
+      injectRegister: false,
       includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
         name: '놀이 학교',

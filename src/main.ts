@@ -8,6 +8,8 @@ import { loadChildName, saveChildName } from './core/profile';
 import { loadProgress, saveProgress } from './core/progress';
 import { isTestMode } from './core/devFlags';
 import { useNativeTtsInApp } from './core/nativeTts';
+import { setupOffline } from './core/offline';
+import { Capacitor } from '@capacitor/core';
 import { seededRng } from './core/rng';
 import { loadPets, reconcileSpent, savePets } from './pets/state';
 import { startRouter, type Route } from './router';
@@ -49,6 +51,13 @@ const SCREENS: Record<Route['name'], Screen> = {
 function boot(root: HTMLElement): void {
   // 앱(APK)에서는 WebView 음성이 안 나오므로 휴대폰 음성 엔진을 쓴다. 브라우저에선 아무 일도 안 함.
   useNativeTtsInApp();
+  // 오프라인 캐시는 브라우저에서만. 앱에서는 예전에 남은 캐시를 지운다 (새 APK가 옛 화면으로 보이던 문제).
+  void setupOffline({
+    isNative: Capacitor.isNativePlatform(),
+    sw: 'serviceWorker' in navigator ? navigator.serviceWorker : undefined,
+    caches: 'caches' in window ? window.caches : undefined,
+    reload: () => location.reload(),
+  }).catch(() => {});
   const progress = loadProgress();
   // 진도 기록만 사라진 경우 쓴 별이 모은 별보다 클 수 없다.
   const loadedPets = loadPets();
