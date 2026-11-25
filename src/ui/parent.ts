@@ -1,4 +1,5 @@
 import { getWorld, type WorldId } from '../content';
+import { canInstall, onInstallChange, promptInstall } from '../core/install';
 import { NAME_MAX, normalizeName } from '../core/profile';
 import { isGroupUnlocked, resetProgress } from '../core/progress';
 import { defaultPets, starBalance } from '../pets/state';
@@ -92,6 +93,16 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
     { 'data-testid': 'reset-btn' },
   );
 
+  // 홈 화면에 추가 (크롬이 허락할 때만 보임)
+  const installBtn = button('📲 홈 화면에 추가', () => void promptInstall(), 'install-btn', {
+    'data-testid': 'install',
+  });
+  const syncInstall = () => {
+    installBtn.hidden = !canInstall();
+  };
+  syncInstall();
+  const offInstall = onInstallChange(syncInstall);
+
   refresh();
   root.append(
     el('section', 'screen parent', [
@@ -102,9 +113,13 @@ export function render(root: HTMLElement, _route: Route, deps: ScreenDeps): Clea
         info,
         stars,
         resetBtn,
+        installBtn,
       ]),
     ]),
   );
 
-  return () => t.clear();
+  return () => {
+    t.clear();
+    offInstall();
+  };
 }

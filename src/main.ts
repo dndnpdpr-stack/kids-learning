@@ -8,6 +8,8 @@ import { loadChildName, saveChildName } from './core/profile';
 import { loadProgress, saveProgress } from './core/progress';
 import { isTestMode } from './core/devFlags';
 import { useNativeTtsInApp } from './core/nativeTts';
+import { installAutoFullscreen } from './core/fullscreen';
+import { captureInstallPrompt } from './core/install';
 import { setupOffline } from './core/offline';
 import { Capacitor } from '@capacitor/core';
 import { seededRng } from './core/rng';
@@ -79,12 +81,17 @@ function boot(root: HTMLElement): void {
     savePets: (p) => savePets(p),
   };
   let cleanup: Cleanup = () => {};
+  let current: Route = { name: 'home' };
+  captureInstallPrompt(window);
+  // 폰 브라우저: 처음 누를 때 전체화면 (부모 메뉴에서는 다시 켜지 않음)
+  installAutoFullscreen(document, { isNative: Capacitor.isNativePlatform(), skip: () => current.name === 'parent' });
   startRouter((route) => {
     cleanup();
     stopSpeaking();
     root.replaceChildren();
     // 이름이 없으면(첫 실행) 어떤 주소로 들어와도 이름 입력 화면을 먼저 보여 준다.
     const r: Route = deps.childName ? route : { name: 'setup' };
+    current = r;
     cleanup = SCREENS[r.name](root, r, deps);
     // 이전 화면이 남긴 안내(인사, 세계 이름)를 새 화면이 뜬 뒤에 말한다.
     const text = deps.announce;

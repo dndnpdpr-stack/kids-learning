@@ -14,7 +14,8 @@ export default defineConfig({
         name: '놀이 학교',
         short_name: '놀이 학교',
         lang: 'ko',
-        display: 'standalone',
+        // 홈 화면에 설치한 앱은 상태 표시줄까지 숨긴다
+        display: 'fullscreen',
         orientation: 'any',
         start_url: '.',
         theme_color: '#fff6e9',

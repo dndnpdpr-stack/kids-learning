@@ -5,6 +5,7 @@ import { defaultPets } from '../../src/pets/state';
 import type { ScreenDeps } from '../../src/ui/dom';
 import { render as renderHome } from '../../src/ui/home';
 import { attachLongPress } from '../../src/ui/longPress';
+import { captureInstallPrompt } from '../../src/core/install';
 import { render as renderParent } from '../../src/ui/parent';
 
 function ptr(node: Element, type: string, id = 1) {
@@ -178,5 +179,25 @@ describe('parent screen', () => {
     expect(b.textContent).toBe('진도 초기화');
     b.click();
     expect(deps.progress.stars).toBe(5);
+  });
+});
+
+describe('add to home screen', () => {
+  captureInstallPrompt(window);
+  afterEach(() => window.dispatchEvent(new Event('appinstalled')));
+
+  it('the button appears only when the browser offers install, and opens its prompt', () => {
+    const root = document.createElement('div');
+    const cleanup = renderParent(root, { name: 'parent' }, makeDeps());
+    const btn = () => root.querySelector<HTMLElement>('[data-testid=install]')!;
+    expect(btn().hidden).toBe(true);
+    const ev = new Event('beforeinstallprompt', { cancelable: true }) as Event & { prompt: () => Promise<void> };
+    ev.prompt = vi.fn(() => Promise.resolve());
+    window.dispatchEvent(ev);
+    expect(btn().hidden).toBe(false);
+    btn().click();
+    expect(ev.prompt).toHaveBeenCalledTimes(1);
+    expect(btn().hidden).toBe(true);
+    cleanup();
   });
 });
